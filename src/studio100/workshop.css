@@ -1,0 +1,13 @@
+.workshop-loadout { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.studio-app .studio-modal .workshop-tool { display:grid; grid-template-columns:36px 1fr; align-items:center; gap:2px 7px; padding:8px; text-align:left; min-width:0; }
+.workshop-tool img { width:34px; height:38px; object-fit:contain; grid-row:span 2; image-rendering:pixelated; }
+.workshop-tool span { font-size:12px; font-weight:bold; }.workshop-tool small { font-size:10px; }
+.studio-app .studio-modal .workshop-tool.selected { border-color:#f0d49a; box-shadow:inset 0 0 0 1px #f0d49a66; }
+.workshop-summary { display:grid; grid-template-columns:1fr auto; gap:8px; padding:16px 2px 6px; color:#ffedb8; }
+.workshop-summary span { font-size:12px; }.workshop-summary small { grid-column:1/-1; font-size:11px; }
+.workshop-relics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.workshop-relic { display:flex; flex-direction:column; gap:8px; padding:12px 9px; border:1px solid #a5b8ac66; border-radius:4px; background:#17334140; }
+.workshop-relic b { font-size:12px; color:#f5db9e; }.workshop-relic small { font-size:10px; line-height:1.5; flex:1; }
+.studio-app .studio-modal .workshop-relic button { margin:0; padding:9px 5px; font-size:10px; }
+.workshop-relic.selected { border-color:#9dd8bc; background:#3a737040; }
+@media(max-width:600px) { .workshop-relics { grid-template-columns:1fr; }.studio-app .studio-modal .workshop-tool { grid-template-columns:1fr; text-align:center; gap:3px; padding:7px 3px; }.workshop-tool img { margin:auto; grid-row:auto; }.workshop-summary { gap:7px; }.workshop-summary strong { font-size:14px; } }

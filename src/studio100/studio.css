@@ -301,3 +301,25 @@
   .weapon-dock,.move-dock { padding:3px; gap:2px; }
   .studio-app .lobby-errands { bottom:74px; }
 }
+/* The archive belongs to the framed noticeboard in the Building 100 foyer. */
+.studio-app .archive-board { transform:translate(-50%,-50%); min-height:76px; padding:9px 4px; border:1px solid #e5cc9780; border-radius:2px; background:#24372f66; color:#fff0c8; font-size:11px; font-weight:bold; letter-spacing:.25px; line-height:1.4; white-space:normal; text-shadow:0 1px 3px #192a20; }
+.archive-board > span { display:block; margin-bottom:4px; color:#efd397; font-size:23px; font-weight:normal; line-height:1; }
+.studio-app .archive-board:hover:not(:disabled),.studio-app .archive-board:focus-visible { transform:translate(-50%,-50%); background:#4a584b73; border-color:#f5dfad; color:#fff7df; }
+.studio-app .archive-board.is-near { border-color:#f5dfad; box-shadow:0 0 18px #e5c98f38; }
+
+/* A compact classroom timer; the separate rest animation keeps its original layout. */
+.class-overlay.is-studying {
+  top:clamp(122px,30%,240px); bottom:auto; width:276px; max-width:calc(100vw - 28px);
+  padding:11px 15px; border:1px solid #f3dba966; border-radius:9px;
+  background:rgb(29 42 49 / 50%); color:#fff3d8; box-shadow:0 3px 15px #18262630;
+  pointer-events:none;
+}
+.class-overlay.is-studying .eyebrow { font-size:9px; letter-spacing:1.6px; }
+.class-overlay.is-studying h3,
+.class-overlay.is-studying #s-class-quote { display:none; }
+.class-overlay.is-studying .stamina-track { height:7px; margin:8px 0 6px; background:#ffffff26; }
+.class-overlay.is-studying .stamina-track i { background:linear-gradient(90deg,#84b7a2,#f6d285); box-shadow:0 0 7px #f6d28550; }
+.class-overlay.is-studying #s-class-progress { color:#fff3d8; font-size:11px; margin:0; }
+@media(max-height:480px) {
+  .class-overlay.is-studying { top:104px; width:228px; padding:8px 11px; }
+}

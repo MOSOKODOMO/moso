@@ -30,7 +30,7 @@ export class ClassroomArena {
    this.props.push({kind,x,y,vx:0,vy:0,homeX:x,homeY:y,state:'rest',owner:null,timer:0,bounces:0,mesh});
   }
  }
- reset(){for(const p of this.props){p.x=p.homeX;p.y=p.homeY;p.state='rest';p.owner=null;p.vx=p.vy=p.timer=p.bounces=0;p.mesh.visible=true;p.mesh.rotation.z=0;}this.sync();}
+ reset(){for(const p of this.props){p.x=p.homeX;p.y=p.homeY;p.state='rest';p.owner=null;p.vx=p.vy=p.timer=p.bounces=0;p.mesh.visible=true;p.mesh.rotation.z=0;p.mesh.scale.set(1,1,1);}this.sync();}
  setVisible(on:boolean){this.group.visible=on;}
  held(owner:PropOwner){return this.props.find(p=>p.owner===owner&&p.state==='held');}
  nearby(body:MotionBody){return this.props.find(p=>p.state==='rest'&&Math.abs(p.x-body.x)<2.1&&Math.abs(p.y-(body.y+.6))<1.6);}
@@ -47,7 +47,18 @@ export class ClassroomArena {
   if(!this.group.visible)return;this.time+=dt;
   for(const p of this.props){
    if(p.state==='spent'){p.timer-=dt;if(p.timer<=0){p.x=p.homeX;p.y=p.homeY;p.state='rest';p.owner=null;p.mesh.visible=true;}continue;}
-   if(p.state==='held'){const body=p.owner==='hero'?hero:boss,dir=p.owner==='hero'?heroFacing:Math.sign(hero.x-boss.x)||1;p.x=body.x+dir*.9;p.y=body.y+2.25;p.mesh.rotation.z=-dir*.4;continue;}
+   if(p.state==='held'){
+    const body=p.owner==='hero'?hero:boss,dir=p.owner==='hero'?heroFacing:Math.sign(hero.x-boss.x)||1;
+    const width=p.owner==='hero'?3.2:3.45,height=p.owner==='hero'?4.05:4.35;
+    // Canvas hand (91.3,121.85) on a 130x165 sprite; place each handle at those fingers.
+    const handX=body.x+dir*(91.3/130-.5)*width,handY=body.y+(1-121.85/165)*height;
+    const scaleX=p.kind==='cup'?-dir:dir,angle=p.kind==='cup'?0:-dir*.24;
+    const gripX=p.kind==='cup'?24*1.3*1.2/160:-Math.sin(.8)*48*1.2/160;
+    const gripY=p.kind==='cup'?-(8+1.3)*1.2/160:-Math.cos(.8)*48*1.2/160;
+    p.x=handX-(gripX*scaleX*Math.cos(angle)-gripY*Math.sin(angle));
+    p.y=handY-(gripX*scaleX*Math.sin(angle)+gripY*Math.cos(angle));
+    p.mesh.scale.x=scaleX;p.mesh.rotation.z=angle;continue;
+   }
    if(p.state!=='flying'){p.mesh.rotation.z=Math.sin(this.time*2+p.homeX)*.08;continue;}
    const oldX=p.x,oldY=p.y;p.timer+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt-9*dt*dt;p.vy-=18*dt;p.mesh.rotation.z+=dt*p.vx*.5;
    if(p.owner){const target=p.owner==='hero'?boss:hero,dx=p.x-oldX,dy=p.y-oldY;const t=Math.max(0,Math.min(1,((target.x-oldX)*dx+(target.y+1.4-oldY)*dy)/(dx*dx+dy*dy||1)));

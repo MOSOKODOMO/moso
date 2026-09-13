@@ -51,17 +51,35 @@ export function cupTexture(): THREE.Texture { const [el, c] = canvas(100, 100); 
 
 export function craftingTableTexture(): THREE.Texture {
   const [el,c]=canvas(600,340);
-  const wood=c.createLinearGradient(0,90,0,320);wood.addColorStop(0,'#ac8050');wood.addColorStop(1,'#463126');
-  rounded(c,76,140,35,184,wood,5);rounded(c,490,140,35,184,wood,5);
-  rounded(c,82,242,435,19,'#765236',3);
-  rounded(c,44,108,514,58,wood,5);rounded(c,32,95,538,24,'#b88c59',5);
-  for(let n=0;n<11;n++)line(c,[58+n*44,120,84+n*42,132,71+n*43,148],'#d9ad7128',2);
-  rounded(c,167,84,230,14,'#658779',2);
-  line(c,[180,89,386,89],'#e3dab988',2);
-  rounded(c,395,23,45,69,'#9e6845',4);
-  for(let n=0;n<4;n++)line(c,[400+n*10,25,392+n*14,4],n%2?'#d9b877':'#739387',6);
-  rounded(c,88,50,57,43,'#d9d1b3',2);line(c,[88,50,116,31,145,50],'#d9d1b3',5);
-  c.save();c.translate(270,78);c.rotate(1.5);toolDrawing(c,'ruler',0,0,.7);c.restore();
+  const metal=c.createLinearGradient(0,138,0,329);metal.addColorStop(0,'#b6b7a9');metal.addColorStop(.55,'#8d938a');metal.addColorStop(1,'#586360');
+  const ivory=c.createLinearGradient(0,129,0,199);ivory.addColorStop(0,'#e3dac0');ivory.addColorStop(1,'#ada58f');
+  const screen=c.createLinearGradient(0,35,0,125);screen.addColorStop(0,'#153e47');screen.addColorStop(1,'#245d61');
+  // Braced metal station with the same warm ivory / teal finish as the fabrication lab.
+  rounded(c,76,162,44,163,metal,6);rounded(c,482,162,44,163,metal,6);
+  rounded(c,67,314,63,14,'#485551',4);rounded(c,473,314,63,14,'#485551',4);
+  rounded(c,102,267,392,18,metal,3);line(c,[112,270,484,270],'#c4c7b4',2);
+  rounded(c,45,150,512,52,ivory,6);rounded(c,29,133,542,25,'#d7ceb5',5);
+  line(c,[39,137,560,137],'#f2e5c7',3);rounded(c,57,166,222,14,'#3b514f',4);
+  rounded(c,66,171,142,4,'#76c4bd',2,false);
+  for(let n=0;n<3;n++)ellipse(c,229+n*15,173,3,3,n===2?'#e4bb72':'#8ed0c3',false);
+  for(let n=0;n<4;n++)line(c,[457,167+n*7,533,167+n*7],'#817f70',2);
+  // CAD monitor, keyboard and a small wireframe architectural model.
+  rounded(c,142,108,17,24,'#677771',3);rounded(c,116,126,71,8,'#949c8c',3);
+  rounded(c,78,28,148,87,'#697b74',6);rounded(c,85,35,134,70,screen,3,false);
+  line(c,[96,87,121,61,150,77,173,49,204,79],'#8edacb',2);
+  line(c,[96,87,149,99,204,79,151,66,96,87],'#84c3bd',2);
+  for(const x of [111,127,144,162,179,195])line(c,[x,91-(x-111)*.13,x,72-Math.sin(x)*9],'#8edacb88',1);
+  rounded(c,90,118,116,13,'#73857d',2);for(let n=0;n<7;n++)line(c,[99+n*15,121,105+n*15,127],'#c7d4ba',2);
+  rounded(c,253,123,119,10,'#456361',3);rounded(c,265,117,95,5,'#bce0d2',2,false);
+  line(c,[280,116,280,87,309,69,341,87,341,116,280,116,309,98,341,116],'#d5e7cd',3);
+  line(c,[280,87,309,98,341,87,309,69,309,98,309,127],'#8fbab0',2);
+  // Compact articulated robotic arm with circular joints and a two-finger gripper.
+  rounded(c,421,112,79,21,metal,5);rounded(c,441,94,40,23,ivory,4);
+  line(c,[460,99,479,61,439,31,414,68],'#344844',19);
+  line(c,[460,99,479,61,439,31,414,68],'#d2c6a8',13);
+  for(const [x,y] of [[460,99],[479,61],[439,31]]){ellipse(c,x,y,13,13,'#a9b3a1');ellipse(c,x,y,7,7,'#6e8078',false);ellipse(c,x-2,y-2,3,3,'#dce0c6',false);}
+  line(c,[414,67,411,82],'#7ec5bc',9);line(c,[409,82,400,91,405,99],'#6d7b72',5);line(c,[416,82,425,91,420,99],'#6d7b72',5);
+  line(c,[477,103,495,74,493,61],'#3b514d',3);
   return texture(el);
 }
 
@@ -79,8 +97,8 @@ export class StudentSprite {
   }
   setTeacher(teacher: Teacher): void { this.teacher = teacher; this.paint(0, false, teacher.tool); }
   setAppearance(appearance: CharacterAppearance): void { this.appearance = { ...appearance }; this.paint(0, false, 'pen'); }
-  paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose: 'uppercut' | 'kick' | 'dodge' | null = null, emptyHands = false): void {
-    paintCharacter(this.c, this.appearance, time, walking, weapon, attack, seated, pose, emptyHands, toolDrawing, this.instructor, this.clerk, this.teacher);
+  paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose: 'uppercut' | 'kick' | 'dodge' | null = null, emptyHands = false, showBackpack = !this.instructor && !this.clerk): void {
+    paintCharacter(this.c, this.appearance, time, walking, weapon, attack, seated, pose, emptyHands, toolDrawing, this.instructor, this.clerk, this.teacher, showBackpack);
     this.texture.needsUpdate = true;
   }
 }
@@ -112,7 +130,7 @@ export function roomTexture(place: Exclude<Place, 'studio' | 'lobby' | 'mystery'
       line(c, [797, 213, 797, 645], '#7b8678', 5);
       rounded(c, 723, 143, 160, 34, '#34493c', 5); text(c, 'G   ↑   ↓', 750, 168, 20, '#ebddb7');
       rounded(c, 1120, 348, 352, 215, '#eee4c8', 7); text(c, 'BUILDING 100', 1161, 388, 28);
-      text(c, 'G — L8   DESIGN STUDIOS', 1150, 432, 18); text(c, 'B1   STUDENT LAB', 1150, 476, 20, '#786342'); text(c, 'B2   MODEL WORKSHOP', 1150, 518, 20, '#786342');
+      text(c, 'G   LOBBY', 1150, 424, 18); text(c, 'L1 — L9   DESIGN STUDIOS', 1150, 458, 18); text(c, 'B1   STUDENT GYM', 1150, 492, 18, '#786342'); text(c, 'B2   MODEL WORKSHOP', 1150, 526, 18, '#786342');
       text(c, 'IDEAS START HERE.', 127, 600, 27, '#526958'); plant(c, 491, 680, 1.15); plant(c, 1080, 679, .95);
     } else if (place === 'home') {
       rounded(c, 570, 450, 470, 230, '#a87960', 12); rounded(c, 585, 460, 440, 184, '#e4c396', 15);

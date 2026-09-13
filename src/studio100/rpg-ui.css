@@ -1,0 +1,114 @@
+/* Compact RPG chrome. HUD panel fills stay at or below 50% opacity. */
+.studio-app { --rpg-gold:#e6ce96; --rpg-teal:#93d9cd; --rpg-paper:#fff1cd; --rpg-line:#d0c49a99; }
+.studio-top { background:transparent; border:0; box-shadow:none; }
+.studio-brand { border-right:0; color:var(--rpg-paper); text-shadow:0 2px #213b43,1px 0 #213b43,-1px 0 #213b43,0 -1px #213b43; }
+.studio-brand strong { font-weight:900; letter-spacing:.35px; }
+.studio-brand strong em { color:#f2c876; }
+.studio-brand .eyebrow { color:#dcebdc; letter-spacing:1.1px; }
+.student-stats { padding:9px 11px; border:1px solid var(--rpg-line); border-radius:6px; background:rgb(23 46 57 / 50%); color:var(--rpg-paper); box-shadow:inset 0 1px #fff7d455,0 2px 0 #162e3d99,0 0 0 2px #25384666; }
+.student-stats .stats-line { gap:10px; margin-bottom:7px; font-family:Tahoma,Verdana,sans-serif; text-shadow:0 1px #0e2836; }
+.student-stats .stats-line b { color:#ffe4a4; font-weight:bold; }
+.student-stats .stamina-track { height:10px; border:1px solid #172c36; border-radius:3px; background:#11263380; box-shadow:inset 0 1px 2px #07131a88,0 1px #d6dbc438; }
+.student-stats .stamina-track i { border-radius:1px; background:linear-gradient(180deg,#bdf3c9 0%,#77c5b2 45%,#51a69f 50%,#70c3aa 100%); box-shadow:inset 0 1px #f3ffdc,0 0 8px #8aecc966; }
+.studio-location { align-self:center; color:var(--rpg-paper); text-shadow:0 2px 3px #092534,0 1px 8px #092534; }
+.studio-location .eyebrow { letter-spacing:1.6px; font-size:8px; color:#d6e9da; }
+.studio-location strong { font-size:14px; color:#fff2cd; letter-spacing:.3px; }
+.studio-meta { color:#e9e2c6; text-shadow:0 1px 3px #0b2838; }
+.studio-meta .coin { color:#ffdb8a; font-size:16px; font-variant-numeric:tabular-nums; }
+.studio-app .studio-meta button { border:1px solid #d7c69b99; border-radius:5px; color:#fff2cd; background:rgb(31 54 66 / 50%); box-shadow:inset 0 1px #fff4d440,inset 0 -2px #081e3166,0 2px #172b3b88; font-size:11px; font-weight:bold; text-shadow:0 1px #172c39; }
+.studio-app .studio-meta button:hover:not(:disabled) { border-color:#f4d496; background:rgb(64 91 98 / 50%); }
+.studio-app .studio-meta button[data-action=pause] { color:#ffe7a7; border-color:#e9c582; }
+.studio-app .studio-meta button:disabled { opacity:.55; }
+.studio-app .journey-dock { padding:11px 13px; border:1px solid #d9c495b3; border-radius:6px; background:rgb(23 44 56 / 50%); color:#f9efcf; box-shadow:inset 0 1px #fff4d438,0 2px 0 #13293b99,0 0 0 2px #26394766; text-shadow:0 1px 3px #132637; }
+.journey-dock > .eyebrow { display:block; padding-bottom:7px; border-bottom:1px solid #d9c49555; color:#ffe3a1; font-size:9px; letter-spacing:1.3px; }
+.journey-dock b { margin:8px 0 7px; font-size:11px; color:#fff3d4; }
+.journey-dock > span:not(.eyebrow) { font-size:10px; color:#d3eadf; }
+.journey-dock small { color:#d8e7df; font-size:10px; line-height:1.4; }
+.journey-dock .xp-track { height:6px; margin-top:8px; border:1px solid #152735; border-radius:2px; background:#102c3380; box-shadow:0 1px #d6dbc42b; }
+.journey-dock .xp-track i { background:linear-gradient(180deg,#ffe4aa,#ddae5d 48%,#c58944 52%,#e5b968); box-shadow:inset 0 1px #fff3c4,0 0 7px #f6cd7f55; }
+.weapon-dock,.move-dock { gap:5px; padding:5px; border:1px solid #c7b68d8c; border-radius:6px; background:transparent; box-shadow:inset 0 1px #f8e8bd33,0 2px #16293788; }
+.studio-app .weapon-button { border:1px solid #9dafad; border-radius:4px; background:rgb(21 45 59 / 50%); box-shadow:inset 0 1px #eaf0da44,inset 0 -3px #152a385c; }
+.weapon-button img { filter:drop-shadow(0 2px 1px #102d3955); image-rendering:pixelated; }
+.weapon-button kbd { color:#f3e8c2; font-size:9px; text-shadow:0 1px #143141; }
+.studio-app .weapon-button:hover:not(:disabled) { border-color:#f5dfa5; background:rgb(67 90 93 / 50%); }
+.studio-app .weapon-button.selected { border-color:#ffdc83; background:rgb(79 82 54 / 50%); box-shadow:inset 0 0 0 1px #f4d48d66,inset 0 -3px #1e35425c,0 0 8px #efc56866; }
+.studio-app .weapon-button.selected::after { content:''; position:absolute; left:17px; right:17px; bottom:3px; height:2px; border-radius:2px; background:#ffdfa0; box-shadow:0 0 5px #ffcd6a; }
+.studio-app .move-dock button { border:1px solid #94b3ba; border-radius:4px; color:#b4eee1; background:linear-gradient(to top,#7ad9c950 calc(var(--cooldown) * 100%),transparent 0),rgb(21 45 59 / 45%); box-shadow:inset 0 1px #eaf0da44,inset 0 -3px #10233366; text-shadow:0 2px #18303f; }
+.studio-app .move-dock button:hover:not(:disabled) { background-color:rgb(59 89 103 / 50%); border-color:#c0f0dd; }
+.move-dock kbd { color:#f3e8c2; }
+.studio-controls { background:rgb(19 41 54 / 50%); color:#f1e9d2; border:1px solid #b9b39466; border-radius:4px; font-family:Tahoma,Verdana,sans-serif; letter-spacing:0; text-shadow:0 1px #14293a; }
+.studio-boss { color:#fff0d2; background:rgb(37 39 51 / 50%); border:1px solid #e0b69d; border-radius:6px; box-shadow:inset 0 1px #ffeed144,0 2px #302a3499,0 0 0 2px #442e3966; }
+.studio-boss strong { color:#ffe4b0; letter-spacing:.4px; text-shadow:0 1px #351a27; }
+.studio-boss .stamina-track { border:1px solid #462936; border-radius:3px; background:#30233280; }
+.studio-boss .stamina-track i { border-radius:2px; background:linear-gradient(180deg,#ffc1a1,#e78779 45%,#c5646a 50%,#db8378); box-shadow:inset 0 1px #ffdebd; }
+.studio-boss p { color:#e9d9c6; font-size:10px; }
+.studio-toast { padding:10px 18px; border:1px solid #cfbf91b3; border-radius:6px; background:rgb(24 46 56 / 50%); box-shadow:inset 0 1px #fff1bf38,0 2px #16303d88; color:#fff0c9; font-size:12px; text-shadow:0 1px #16313a; }
+
+/* Game dialogs share a small title bar and framed choices; the dressing room and settings own their styling. */
+.studio-modal-backdrop:not(.dressing-backdrop):not(:has(.settings-modal)) { background:rgb(10 25 38 / 45%); backdrop-filter:blur(8px); }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) { padding:22px; border:2px solid #c1b58d; border-radius:8px; background:rgb(28 47 58 / 50%); color:#f6edce; box-shadow:inset 0 1px #fff0bf66,0 0 0 3px #172d3cb3,0 0 0 4px #e2cd9640,0 20px 55px #07172177; scrollbar-color:#b2b698 #18313e; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) > header { gap:14px; align-items:center; margin:-8px -8px 17px; padding:0 0 11px; border-bottom:1px solid #d3c39599; box-shadow:0 1px #142c3d99; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) header .eyebrow { color:#b6d6cc; font-size:8px; letter-spacing:1.6px; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) h1 { margin:6px 0 0; color:#ffedb8; font:bold 22px/1.15 'Trebuchet MS',Verdana,sans-serif; letter-spacing:.3px; text-shadow:0 2px #172d3c; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) h3 { color:#f8e8bf; font-size:15px; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) p { color:#d4e0d6; font-size:12px; line-height:1.55; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) :is(.detail,small,footer,.faculty-note,.mystery-note) { color:#bdccc5; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) :is(.choice,.teacher-intro,.faculty-card,.invention-panel) { border-color:#a3b7ad66; border-radius:6px; background:transparent; box-shadow:inset 0 1px #d7e1c717; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .choice { padding:15px; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button { color:#f7ebc7; background:linear-gradient(180deg,#718d8c66,#2b4b5a66); border:1px solid #b7c7b799; border-radius:5px; box-shadow:inset 0 1px #edffdd44,0 2px #10283799; padding:9px 13px; font-size:12px; font-weight:bold; text-shadow:0 1px #163442; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button:hover:not(:disabled) { border-color:#f0d598; background:linear-gradient(180deg,#89a09e80,#46716f80); }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button:active:not(:disabled) { transform:translateY(1px); box-shadow:inset 0 1px #0c243855; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button.primary { color:#ebffe8; border-color:#9ce1c7; background:linear-gradient(180deg,#65a99d80,#347b7380); }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button.rust { border-color:#dfb08b; background:linear-gradient(180deg,#a7735680,#8e554880); color:#ffedcd; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button.close { flex:none; width:30px; height:29px; padding:0; font-size:23px; line-height:1; color:#ffe5ba; border-color:#dcb797; background:linear-gradient(180deg,#ab7c6c80,#824a5080); }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .floor-row { min-height:40px; border-color:#a5b8ac66; background:transparent; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .floor-row.current { border-color:#f0d49a; background:rgb(141 125 80 / 30%); box-shadow:inset 3px 0 #f2d28e,inset 0 1px #f7e5b933; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .floor-code { color:#e8d09a; font-weight:bold; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .workshop-heading { color:#a8e4cc; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .floor-row.upgrade-row { border-color:#9dd8bc99; box-shadow:inset 3px 0 #8bcaba; background:rgb(58 115 112 / 25%); }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .archive-link { margin-bottom:12px; color:#f5db9e; border-color:#ccb78399; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .faculty-card { padding:11px; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .faculty-card .eyebrow { color:#bcdacc; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .invention-panel input { color:#f5edcf; background:#17334166; border-color:#9fc5b7; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .invention-panel input::placeholder { color:#b7c9c1; }
+
+@media(max-width:1000px) {
+ .student-stats { padding:8px 9px; }
+ .studio-location strong { font-size:12px; }
+ .studio-app .studio-meta button { font-size:10px; }
+}
+@media(max-width:600px) {
+ .studio-brand .eyebrow { display:none; }
+ .studio-top { gap:8px; padding:9px 12px; }
+ .student-stats { box-sizing:border-box; min-width:155px; padding:7px 8px; }
+ .student-stats .stats-line { font-size:10px; gap:5px; margin-bottom:5px; }
+ .student-stats .stamina-track { height:8px; }
+ .studio-app .studio-meta button { padding:7px 9px; }
+ .studio-app .journey-dock { padding:9px 10px; }
+ .journey-dock > .eyebrow { font-size:8px; padding-bottom:5px; }
+ .journey-dock b { font-size:10px; line-height:1.35; }
+ .journey-dock small { font-size:9px; }
+ .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) { padding:18px; }
+ .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) h1 { font-size:19px; }
+ .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .floor-row { padding:9px; }
+ .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .floor-row strong { font-size:11px; }
+}
+@media(pointer:coarse) {
+ .studio-app .touch-controls button { border:1px solid #d0c99e; border-radius:7px; color:#fff1cb; background:rgb(26 52 66 / 50%); box-shadow:inset 0 1px #eff9d844,inset 0 -3px #102b3d66,0 2px #122b3c88; font-weight:bold; text-shadow:0 1px #102c3c; }
+ .studio-app .touch-controls button.pressed { background:rgb(94 129 118 / 50%); border-color:#ffe1a3; }
+ .studio-app .touch-actions button[data-touch=attack] { border-color:#e4c184; color:#ffe4aa; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) {
+ .studio-top { padding:5px 14px; gap:13px; }
+ .student-stats { padding:5px 8px; }
+ .studio-dock { justify-content:flex-start; }
+ .student-stats .stats-line { margin-bottom:4px; }
+ .studio-app .journey-dock { padding:6px 9px; }
+ .journey-dock > .eyebrow { display:none; }
+ .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) { padding:17px; max-height:calc(100dvh - 20px); }
+}
+@media(prefers-reduced-motion:reduce) {
+ .studio-app :is(.weapon-button,.move-dock button,.studio-meta button) { transition:none; }
+}
+.shop-invention-panel { margin-top:0; padding-top:0; border-top:0; }
+.clerk-services { display:flex; flex-wrap:wrap; gap:9px; margin-top:12px; }

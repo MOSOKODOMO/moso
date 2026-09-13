@@ -23,7 +23,7 @@ function mix(a: string, b: string, amount: number): string {
 export function paintCharacter(
   c: CanvasRenderingContext2D, appearance: CharacterAppearance,
   time: number, walking: boolean, weapon: Weapon, attack: number, seated: boolean,
-  pose: Pose, emptyHands: boolean, tool: ToolPainter, instructor = false, clerk = false, teacher?: Teacher,
+  pose: Pose, emptyHands: boolean, tool: ToolPainter, instructor = false, clerk = false, teacher?: Teacher, showBackpack = !instructor && !clerk,
 ): void {
   const a: Look = { ...appearance };
   if (instructor && teacher) Object.assign(a, {
@@ -63,6 +63,8 @@ export function paintCharacter(
   c.clearRect(0, 0, 130, 165); c.save(); c.translate(65, bounce); c.lineCap = 'round'; c.lineJoin = 'round';
   if (pose === 'dodge') { c.translate(0, 38); c.scale(1.06, .76); }
 
+  // Lower the whole head assembly slightly so the neck stays short and natural.
+  c.save(); c.translate(0, 3);
   // Back hair is behind the entire figure, so neck, shoulders and outfits read clearly.
   if (style === 'long') {
     path('M-31 51 Q-45 83-36 123 Q-28 136-18 122 L-9 70 Z', hairShade);
@@ -82,6 +84,20 @@ export function paintCharacter(
   } else if (style === 'bob') {
     path('M-32 48 Q-40 66-33 96 Q-22 103-16 89 L18 89 Q28 105 35 92 Q40 67 32 49Z', hairShade);
     line('M-32 65 Q-33 88-27 95 M32 66 Q34 86 29 96', hairLight, 1.4);
+  }
+
+  c.restore();
+
+  const backpack = showBackpack && !instructor && !clerk;
+  if (backpack) {
+    // A compact pack behind the shoulder, with a gusset and zipped front pocket.
+    line('M-24 102 Q-27 93-19 95 L-17 101', '#594c4b', 2.3);
+    path('M-24 99 Q-31 100-32 108 L-32 125 Q-31 132-23 132 L-12 129 L-13 104 Q-15 98-24 99Z', grad(99, 133, '#b29876', '#786455'));
+    path('M-28 103 Q-23 99-17 103 L-16 127 L-24 130 Q-29 128-29 123Z', '#a58b6d', '', 0);
+    box(-31, 116, 14, 12, 3, '#8b735d', '#5b5050', .85);
+    line('M-28 119 L-19 119', '#d4bc96', 1);
+    line('M-20 119 L-20 122', '#e5c57f', 1.1);
+    line('M-15 107 L-14 124', '#d0b58c', .8);
   }
 
   // The leg and shoe shapes have ankles, rounded toes and soles instead of rectangular blocks.
@@ -115,15 +131,28 @@ export function paintCharacter(
   }
 
   const arm = (front: boolean) => {
-    c.save(); c.translate(front ? 17 : -18, 106); c.rotate(front ? pose === 'uppercut' ? -2.35 : pose === 'kick' ? .6 : attack ? -1.05 + attack * 2.1 : -.14 : .17 + step * .13);
+    const poke = front && weapon === 'pen' && attack && !pose && !emptyHands ? Math.sin(attack * Math.PI) : 0;
+    const angle = front ? pose === 'uppercut' ? -2.35 : pose === 'kick' ? .6 : poke ? -.14 - poke * .35 : attack ? -1.05 + attack * 2.1 : -.14 : .17 + step * .13;
+    c.save(); c.translate(front ? 17 + poke * 2 : -18, 106 - poke); c.rotate(angle);
     const sleeve = outfit === 'varsity' || outfit === 'classic' || outfit === 'street';
     path(front ? 'M-2-6 Q7-7 9 0 L13 12 Q13 18 6 18 Q2 18 1 12 L-5 3Z' : 'M-3-6 Q-9-5-10 3 L-12 14 Q-10 20-4 17 L3 2Z', sleeve ? outfit === 'varsity' ? '#fbefdc' : cloth : skin);
     if (!sleeve) path(front ? 'M7 0 Q12 8 11 14 L8 14 Q8 7 5 3Z' : 'M-9 1 L-10 12 L-7 12 L-6 1Z', skinShade, '', 0);
     if (sleeve) { line(front ? 'M3 11 L11 10' : 'M-11 11 L-5 12', outfit === 'varsity' ? cloth : clothLight, 2); }
     if (front) {
       if (!pose && !emptyHands && !clerk) {
-        c.save(); c.translate(9, 18); c.rotate(weapon === 'cup' ? -.1 : -.54);
-        tool(c, weapon, 0, -8, weapon === 'cup' ? .29 : weapon === 'ruler' ? .4 : .39); c.restore();
+        c.save(); c.translate(7, 17);
+        // Each native grip point sits under the fingers. Pointed tools face outwards.
+        if (weapon === 'cup') {
+          c.rotate(-angle - .06); c.scale(-1, 1);
+          tool(c, weapon, -24 * .29, -.29, .29);
+        } else if (weapon === 'ruler') {
+          c.rotate((attack ? .55 + attack : .88) - angle);
+          tool(c, weapon, 0, -48 * .32, .32);
+        } else {
+          c.rotate((attack ? -Math.PI / 2 + .12 : -1.12) - angle);
+          tool(c, weapon, 0, 43 * .32, .32);
+        }
+        c.restore();
       }
       if (clerk) { c.save(); c.translate(9, 13); c.rotate(-.2); box(-5, -4, 13, 18, 1.5, '#e7d5b2'); line('M-2 1 L5 1 M-2 4 L4 4', '#9c866d', .8); c.restore(); }
       oval(7, 17, 5.4, 5.3, skin, INK, 1.1); line('M4 16 L4 18', skinShade, .8);
@@ -132,9 +161,9 @@ export function paintCharacter(
     c.restore();
   };
   arm(false);
-  // A deliberately exposed neck bridges chin and collar, with a small cast shadow.
-  path('M-5 87 L5 87 L6 100 Q0 103-6 100Z', skin);
-  path('M-5 88 L5 88 L5 93 Q0 95-5 93Z', skinShade, '', 0);
+  // A short tapered neck blends into the collar; the head covers its upper edge.
+  path('M-4 91 L4 91 L4.8 100 Q0 102-4.8 100Z', skin, skinShade, .65);
+  path('M-4 94 L4 94 L4 100 Q0 101-4 100Z', grad(94, 101, skinShade, skin), '', 0);
 
   const body = 'M-10 98 Q-17 98-20 105 L-15 111 L-15 127 Q0 131 15 127 L15 111 L20 105 Q17 99 10 98 Q0 106-10 98Z';
   if (outfit === 'campus') {
@@ -191,6 +220,14 @@ export function paintCharacter(
     oval(5, 120, 1, 1, '#e7c18b');
   }
 
+  if (backpack) {
+    line('M-13 101 Q-11 110-13 125 M13 102 Q15 111 13 124', '#6d6156', 3.1);
+    line('M-13 102 Q-12 110-13 123 M13 103 Q14 111 13 122', '#c4ad88', 1.25);
+    box(-14.5, 118, 3, 4, .8, '#dfc791', '', 0);
+    box(11.5, 118, 3, 4, .8, '#dfc791', '', 0);
+  }
+
+  c.save(); c.translate(0, 3);
   // Face: soft cheek curve, warm edge shading, small chin and expressive oval irises.
   const head = 'M-28 48 Q-29 34 0 33 Q30 35 29 52 L28 72 Q26 84 13 90 Q0 97-14 90 Q-27 85-29 72Z';
   if (style !== 'bald') path('M-32 66 Q-40 35-20 21 Q-3 11 17 21 Q39 29 35 63 L28 76 L-29 77Z', hairShade);
@@ -287,6 +324,7 @@ export function paintCharacter(
     box(-31, 31, 62, 8, 3, '#baa5cc'); line('M-19 25 Q-3 21 16 25', '#cfbcdc', 1.5);
     box(8, 32.5, 11, 4, 1, '#f1dfbc', '', 0);
   }
+  c.restore();
   arm(true);
   if (seated) {
     path('M-15 127 L0 126 L15 127 L16 136 L1 135 L-16 136Z', '#f4e4c7');

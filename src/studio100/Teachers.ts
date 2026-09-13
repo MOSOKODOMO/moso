@@ -1,4 +1,4 @@
-/** Names and visual cues transcribed from the user's three supplied reference sheets.
+/** Visual cues come from the user's reference sheets; display names use sound-alike first-name aliases.
  * These are playful game interpretations; dialogue and combat are fictional.
  */
 export type TeacherLook = { hairStyle: 'short' | 'swept' | 'long' | 'bob' | 'bald' | 'curly'; hair: string; skin: string; coat: string; glasses: 'none' | 'square' | 'round' | 'red'; beard: 'none' | 'goatee' | 'beard' | 'full' | 'stubble' };
@@ -6,8 +6,8 @@ export interface Teacher extends TeacherLook { id: string; name: string; project
 const entries: [string,string,string,TeacherLook['hairStyle'],string,string,string,TeacherLook['glasses'],TeacherLook['beard']][] = [
   [
     "patrick",
-    "Patrick",
-    "Matter Vibrant: Selfie Edition",
+    "Patrik",
+    "Foundations",
     "short",
     "#272b2b",
     "#e5bd95",
@@ -17,8 +17,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "alisa",
-    "Alisa",
-    "AI Accelerated Architect",
+    "Aleesa",
+    "Form & Space",
     "long",
     "#694737",
     "#f0ceb1",
@@ -28,8 +28,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "srivarenya",
-    "Srivarenya",
-    "Grounded Communities",
+    "Srivarenia",
+    "The Human Scale",
     "long",
     "#302e2d",
     "#bf9475",
@@ -39,8 +39,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "jimi",
-    "Jimi",
-    "Tite Haus",
+    "Jimmi",
+    "Order & Proportion",
     "swept",
     "#262c2b",
     "#d9b391",
@@ -50,8 +50,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "steven",
-    "Steven",
-    "Grounded Communities",
+    "Steevan",
+    "City & Context",
     "bald",
     "#292e2c",
     "#d8b594",
@@ -61,8 +61,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "neil",
-    "Neil",
-    "Lyons Practice Studio: Free-Furb",
+    "Neel",
+    "Material & Texture",
     "curly",
     "#a2a49b",
     "#ebc5a4",
@@ -72,8 +72,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "nic",
-    "Nic",
-    "ReTectonics: Beijing Travelling Studio",
+    "Nikk",
+    "Geometry & Rhythm",
     "short",
     "#252c2e",
     "#eed3b6",
@@ -83,8 +83,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "graham",
-    "Graham",
-    "Tite Haus",
+    "Grayam",
+    "The Courtyard",
     "bald",
     "#666a60",
     "#d2b99f",
@@ -94,8 +94,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "lauren_crockett",
-    "Lauren",
-    "Matter",
+    "Loren",
+    "Light & Shadow",
     "bob",
     "#8b7663",
     "#e5c3a6",
@@ -105,8 +105,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "charles",
-    "Charles",
-    "Facadism",
+    "Charls",
+    "Surface & Depth",
     "short",
     "#51463b",
     "#dfc0a5",
@@ -116,8 +116,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "peter",
-    "Peter",
-    "Instrument Architecture",
+    "Peeter",
+    "Structure & Balance",
     "curly",
     "#c5c3b7",
     "#e5c6a9",
@@ -127,8 +127,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "simon",
-    "Simon",
-    "Counter Errorism 4",
+    "Saimon",
+    "Thresholds",
     "bald",
     "#8b6c45",
     "#e7c4a1",
@@ -138,8 +138,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "rodney",
-    "Rodney",
-    "MARCH Practice Studio",
+    "Rodnee",
+    "Rooms & Routes",
     "short",
     "#313331",
     "#ebc7a9",
@@ -149,8 +149,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "carolyn",
-    "Carolyn",
-    "Yalukit Weelam 2.0",
+    "Karolyn",
+    "Place & Memory",
     "curly",
     "#a49e89",
     "#bd9070",
@@ -160,8 +160,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "meagan",
-    "Meagan",
-    "Cerulean Blue",
+    "Meegan",
+    "Colour & Atmosphere",
     "bob",
     "#8c7055",
     "#e9c7a7",
@@ -171,8 +171,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "briony",
-    "Briony",
-    "Lyons Practice Studio: Free-Furb",
+    "Bryonee",
+    "Making & Craft",
     "long",
     "#665545",
     "#efcfb2",
@@ -182,8 +182,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "yuchen",
-    "Yuchen",
-    "Cerulean Blue",
+    "Yuchenn",
+    "The Garden Room",
     "bob",
     "#312f29",
     "#e8c5a2",
@@ -193,8 +193,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "lauren_garner",
-    "Lauren",
-    "Coburg Iterations",
+    "Lauryn",
+    "Dwelling & Place",
     "bob",
     "#70513d",
     "#edc6a5",
@@ -204,8 +204,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "marc",
-    "Marc",
-    "Chameleon",
+    "Maark",
+    "Pattern & Variation",
     "short",
     "#383632",
     "#e8c5a6",
@@ -215,8 +215,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "tom",
-    "Tom",
-    "Scrape and Anti-scrape",
+    "Tomm",
+    "Solid & Void",
     "curly",
     "#433a31",
     "#dab08f",
@@ -226,8 +226,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "bryn",
-    "Bryn",
-    "Customary Tenure",
+    "Brinn",
+    "The Everyday City",
     "curly",
     "#625a4b",
     "#e9cbb0",
@@ -237,8 +237,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "greg",
-    "Greg",
-    "ReTectonics: Beijing Travelling Studio",
+    "Gregg",
+    "Lines & Layers",
     "swept",
     "#9b9c92",
     "#d9b899",
@@ -248,8 +248,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "mark",
-    "Mark",
-    "The Melbourne Studio",
+    "Marq",
+    "Streets & Squares",
     "curly",
     "#3f4039",
     "#e5c4a4",
@@ -259,8 +259,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "olivia_odonnell",
-    "Olivia",
-    "Typical System",
+    "Olivya",
+    "Ground & Landscape",
     "long",
     "#5d554c",
     "#e5c7ae",
@@ -270,8 +270,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "liam",
-    "Liam",
-    "Typical System",
+    "Leeam",
+    "Public & Private",
     "bald",
     "#5d574d",
     "#e7c7a9",
@@ -281,8 +281,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "caleb",
-    "Caleb",
-    "KTA Practice Studio: Housing Atlas",
+    "Kayleb",
+    "The Small House",
     "short",
     "#292d2a",
     "#e4bd97",
@@ -292,8 +292,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "vicky",
-    "Vicky",
-    "Lyons Practice Studio: Free-Furb",
+    "Vikki",
+    "Shelter & Comfort",
     "long",
     "#353733",
     "#dfb694",
@@ -303,8 +303,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "steph",
-    "Steph",
-    "Matter",
+    "Steff",
+    "Composition & Detail",
     "long",
     "#b7a182",
     "#e9c9ac",
@@ -314,8 +314,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "caitlyn",
-    "Caitlyn",
-    "Mongrel Materials",
+    "Kaitlyn",
+    "Reuse & Renewal",
     "short",
     "#3b3a33",
     "#e1bea1",
@@ -325,8 +325,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "stasinos",
-    "Stasinos",
-    "Yalukit Weelam 2.0",
+    "Stassinoss",
+    "Edges & Boundaries",
     "swept",
     "#827363",
     "#d6aa85",
@@ -336,8 +336,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "paul",
-    "Paul",
-    "Never Waste a Good Crisis",
+    "Pawl",
+    "Scale & Measure",
     "short",
     "#b9b8a9",
     "#e3c0a3",
@@ -347,8 +347,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "olivia_peel",
-    "Olivia",
-    "KTA Practice Studio: Housing Atlas",
+    "Olyvia",
+    "The Urban Block",
     "bob",
     "#655240",
     "#e8c7a6",
@@ -358,8 +358,8 @@ const entries: [string,string,string,TeacherLook['hairStyle'],string,string,stri
   ],
   [
     "christine",
-    "Christine",
-    "Yalukit Weelam 2.0",
+    "Kristeen",
+    "The Grand Atelier",
     "long",
     "#352f2b",
     "#d9ae8b",
