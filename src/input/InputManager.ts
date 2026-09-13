@@ -89,6 +89,7 @@ export class InputManager {
       cb(e.code);
       return;
     }
+    if (e.target instanceof HTMLElement && (e.target.matches('input,textarea,select') || e.target.isContentEditable)) return;
     if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
     if (e.repeat) return;
     this.down.add(e.code);

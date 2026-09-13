@@ -174,7 +174,18 @@
 .studio-dock { justify-content:flex-start; }
 .studio-interaction { flex:1; padding:0; }
 .studio-controls { display:inline-block; padding:5px 9px; border-radius:5px; background:#27392e66; }
-.context-hint { font-size:10px; padding:5px 9px; color:#f8efce; background:#354b3ddd; border-color:#c9c4a0; }
+.context-hint,.crafting-label { font-size:10px; padding:5px 9px; color:#fff5d8; background:#354b3d73; border-color:#c9c4a080; text-shadow:0 1px 3px #17251d; }
+.invention-panel { margin-top:24px; padding-top:22px; border-top:1px solid #adb49b; }
+.invention-panel label,.invention-panel input { display:block; }
+.invention-panel input { box-sizing:border-box; width:100%; padding:13px; margin:8px 0 12px; border:1px solid #879879; border-radius:8px; font:inherit; background:#fffdf4; color:#293c30; }
+.invention-preview img { width:64px; float:right; }
+.invention-owned { padding:12px 0; }
+.invention-owned small { display:block; }
+.menu-actions { display:flex;flex-wrap:wrap;gap:10px; }
+.studio-modal details { border-top:1px solid #b8baa6;padding:17px 0; }
+.studio-modal summary { cursor:pointer;font-weight:bold; }
+.studio-modal .binding-row { display:flex;width:100%;justify-content:space-between;margin:7px 0; }
+#music-volume { display:block;width:100%;margin:16px 0;accent-color:#4d7160; }
 .faculty-card img,.teacher-intro img { image-rendering:pixelated; }
 .move-dock { display:flex; gap:4px; padding:5px; border:1px solid #c9caba80; background:rgba(245,239,223,.5); border-radius:12px; }
 .studio-app .move-dock button { --cooldown:0; position:relative; width:46px; height:53px; padding:6px; font-size:27px; background:linear-gradient(to top,#60785766 calc(var(--cooldown) * 100%),transparent 0); overflow:hidden; }
@@ -233,6 +244,7 @@
 @media(max-width:600px) { .character-backdrop { padding:0; } .studio-modal.character-modal { max-height:100dvh; height:100dvh; border-radius:0; border:0; } .character-creator { grid-template-columns:1fr; } .character-preview { min-height:410px; } .character-modal > header { left:24px; top:25px; } .character-modal > header h1 { font-size:38px; } .character-modal .creator-story { top:145px; left:25px; max-width:145px; font-size:11px; } .character-stage { width:180px; height:228px; bottom:67px; left:73%; } .character-stage > img { width:180px; height:228px; } .character-modal .student-card { left:24px; right:auto; bottom:64px; text-align:left; width:165px; } .character-modal .student-card strong { font-size:21px; } .character-modal .student-card small { font-size:9px; } .character-modal .student-card span { font-size:8px; letter-spacing:1px; } .character-options { padding:28px 25px; } .character-options .creator-options-heading h2 { font-size:32px; } }
 @media(prefers-reduced-motion:reduce) { .character-stage > img { animation:none; } }
 .touch-controls { display:none; }
+.studio-nameplate.character-name { transform:translate(-50%,0); padding:3px 9px; border:0; border-radius:5px; background:#263a3066; color:#fff2cd; font-size:12px; font-weight:bold; text-shadow:0 1px 3px #17251d; }
 #game-container canvas { touch-action:none; }
 .studio-modal { touch-action:pan-y; overscroll-behavior:contain; }
 @media(pointer:coarse) {
@@ -263,7 +275,7 @@
   .studio-boss p { font-size:9px; }
   .character-options .colour-swatch { width:40px; height:40px; }
 }
-@media(pointer:coarse) and (max-width:600px) {
+@media(max-width:600px) {
   .studio-top { min-height:80px; padding:10px 12px; gap:8px; flex-wrap:wrap; }
   .studio-brand { width:116px; min-width:116px; }
   .studio-meta { margin-left:auto; gap:5px; }

@@ -1,5 +1,6 @@
 import { TEACHERS, assignTeachers, sanitizeAssignments } from './Teachers';
 import { defaultAppearance, sanitizeAppearance, type CharacterAppearance } from './CharacterAppearance';
+import { sanitizeInventions, type Invention } from './Inventions';
 export type Weapon = 'pen' | 'ruler' | 'cup';
 export type Place = 'lobby' | 'foyer' | 'mystery' | 'studio' | 'home' | 'skills' | 'tools';
 export type Route = 'study' | 'fight';
@@ -21,12 +22,13 @@ export interface StudioSave {
   professorWins: string[];
   appearance: CharacterAppearance;
   characterCreated: boolean;
+  inventions: Partial<Record<Weapon, Invention>>;
 }
 export function newStudent(): StudioSave {
   return { version: 1, level: 1, xp: 0, coins: 90, stamina: 100, day: 1, studio: 1, place: 'lobby',
     knowledge: Array(9).fill(0), cleared: Array(9).fill(null), weapon: 'pen', owned: ['pen', 'ruler', 'cup'],
     toolRanks: { pen: 0, ruler: 0, cup: 0 }, endurance: 0, efficiency: 0, shoes: false, introSeen: false,
-    charms: { anchor: false, moon: false, echo: false }, teacherAssignments: assignTeachers(), professorWins: [], appearance:defaultAppearance(), characterCreated:false };
+    charms: { anchor: false, moon: false, echo: false }, teacherAssignments: assignTeachers(), professorWins: [], appearance:defaultAppearance(), characterCreated:false, inventions:{} };
 }
 const integer = (v: unknown, min: number, max: number, fallback: number) => typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.floor(v))) : fallback;
 export const maxStamina = (s: StudioSave) => 100 + (s.level - 1) * 5 + s.endurance * 20 + (s.charms?.moon ? 15 : 0);
@@ -37,6 +39,7 @@ export function sanitizeSave(raw: unknown): StudioSave {
   const s = newStudent();
   if (!raw || typeof raw !== 'object' || (raw as Partial<StudioSave>).version !== 1) return s;
   const r = raw as Partial<StudioSave>;
+  s.inventions = sanitizeInventions(r.inventions);
   s.appearance=sanitizeAppearance(r.appearance); s.characterCreated=r.characterCreated===true;
   s.level = integer(r.level, 1, 30, 1); s.xp = integer(r.xp, 0, xpNeeded(s) - 1, 0);
   s.coins = integer(r.coins, 0, 99999, 90); s.day = integer(r.day, 1, 9999, 1);

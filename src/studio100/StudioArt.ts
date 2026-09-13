@@ -4,7 +4,7 @@ import type { Teacher } from './Teachers';
 import { defaultAppearance, type CharacterAppearance } from './CharacterAppearance';
 
 const INK = '#303430';
-export function rounded(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string, r = 8, stroke = true): void {
+export function rounded(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string | CanvasGradient, r = 8, stroke = true): void {
   c.beginPath(); c.roundRect(x, y, w, h, r); c.fillStyle = fill; c.fill();
   if (stroke) { c.strokeStyle = INK; c.lineWidth = 3; c.stroke(); }
 }
@@ -48,6 +48,22 @@ export function toolIcon(kind: Weapon): string {
 }
 export function cupTexture(): THREE.Texture { const [el, c] = canvas(100, 100); toolDrawing(c, 'cup', 45, 55, 1.1); return texture(el); }
 
+export function craftingTableTexture(): THREE.Texture {
+  const [el,c]=canvas(600,340);
+  const wood=c.createLinearGradient(0,90,0,320);wood.addColorStop(0,'#ac8050');wood.addColorStop(1,'#463126');
+  rounded(c,76,140,35,184,wood,5);rounded(c,490,140,35,184,wood,5);
+  rounded(c,82,242,435,19,'#765236',3);
+  rounded(c,44,108,514,58,wood,5);rounded(c,32,95,538,24,'#b88c59',5);
+  for(let n=0;n<11;n++)line(c,[58+n*44,120,84+n*42,132,71+n*43,148],'#d9ad7128',2);
+  rounded(c,167,84,230,14,'#658779',2);
+  line(c,[180,89,386,89],'#e3dab988',2);
+  rounded(c,395,23,45,69,'#9e6845',4);
+  for(let n=0;n<4;n++)line(c,[400+n*10,25,392+n*14,4],n%2?'#d9b877':'#739387',6);
+  rounded(c,88,50,57,43,'#d9d1b3',2);line(c,[88,50,116,31,145,50],'#d9d1b3',5);
+  c.save();c.translate(270,78);c.rotate(1.5);toolDrawing(c,'ruler',0,0,.7);c.restore();
+  return texture(el);
+}
+
 export class StudentSprite {
   readonly canvas: HTMLCanvasElement; private c: CanvasRenderingContext2D; readonly texture: THREE.CanvasTexture;
   private appearance: CharacterAppearance = defaultAppearance();
@@ -55,6 +71,7 @@ export class StudentSprite {
   setTeacher(teacher: Teacher): void { this.teacher = teacher; this.paint(0, false, teacher.tool); }
   setAppearance(appearance: CharacterAppearance): void { this.appearance={...appearance};this.paint(0,false,'pen'); }
   paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose:'uppercut'|'kick'|'dodge'|null=null, emptyHands=false): void {
+    if(!this.instructor&&!this.clerk){this.paintPlayer(time,walking,weapon,attack,seated,pose,emptyHands);return;}
     const c = this.c, t = this.teacher ?? (!this.instructor && !this.clerk ? {...this.appearance,coat:this.appearance.sex==='female'?'#4d5662':'#374b48',glasses:'none',beard:'none'} : undefined); c.clearRect(0, 0, 130, 165); c.save(); c.scale(.5,.5);c.translate(125, 0);
     const step = walking ? Math.sin(time * 13) * 12 : 0;
     c.translate(0, walking ? -Math.abs(step) * .3 : Math.sin(time * 2) * 1.5);
@@ -138,6 +155,68 @@ export class StudentSprite {
     c.translate(10, 40); c.rotate(-.4); if (this.clerk) { rounded(c, -15, -20, 33, 43, '#d9c8a5', 3); line(c, [-9, -9, 11, -9], '#84745b', 2); } else if(!pose&&!emptyHands) toolDrawing(c, weapon, 10, -10, attack > 0 ? 1.25 : .78); c.restore();
     if (seated) { rounded(c, -10, 208, 69, 45, '#d9c4a0', 3); line(c, [2, 220, 42, 220], '#8f8a73', 2); line(c, [2, 230, 33, 230], '#8f8a73', 2); }
     c.restore();c.restore(); this.texture.needsUpdate = true;
+  }
+  /** Reference-led player silhouette: visible neck, separate torso/hips and planted boots. */
+  private paintPlayer(time:number,walking:boolean,weapon:Weapon,attack:number,seated:boolean,pose:'uppercut'|'kick'|'dodge'|null,emptyHands:boolean):void {
+    const c=this.c,a=this.appearance,step=walking?Math.sin(time*12)*12:0;
+    c.clearRect(0,0,130,165);c.save();c.scale(.5,.5);c.translate(122,0);
+    c.translate(0,walking?-Math.abs(step)*.2:Math.sin(time*2)*1);
+    if(pose==='dodge'){c.translate(0,73);c.scale(1.08,.77);}
+    const poly=(points:number[],fill:string,width=4)=>{c.beginPath();c.moveTo(points[0],points[1]);for(let i=2;i<points.length;i+=2)c.lineTo(points[i],points[i+1]);c.closePath();c.fillStyle=fill;c.fill();c.strokeStyle='#252824';c.lineWidth=width;c.lineJoin='round';c.stroke();};
+    const shine=(colour:string,alpha=.28)=>{c.save();c.globalAlpha=alpha;c.strokeStyle=colour;c.lineWidth=7;c.lineCap='butt';};
+    // Legs remain distinct from shorts, including during the side kick.
+    c.save();c.translate(-22,267+step);c.rotate(seated?1:walking?-.2: .24);
+    rounded(c,-13,0,26,33,a.skin,5);rounded(c,-17,24,37,25,'#735b37',4);line(c,[-14,44,19,44],'#382f22',5);line(c,[-11,28,5,28],'#c3a473',4);c.restore();
+    c.save();c.translate(19,268-step);c.rotate(pose==='kick'?-1.3:seated?-1:walking?.2:-.13);
+    rounded(c,-12,0,24,31,a.skin,5);rounded(c,-15,23,43,25,'#82683e',4);line(c,[-13,44,25,44],'#382f22',5);line(c,[-10,28,7,28],'#d3b27a',4);c.restore();
+    poly([-32,246,32,246,35,272,5,276,0,263,-8,276,-37,268],'#40556b');
+    line(c,[-30,253,27,253],'#88acd0',5);line(c,[-5,262,-8,270],'#b5d0de',3);
+    // Back arm and a neck that is not hidden inside the head or collar.
+    poly([-25,202,-44,212,-54,232,-44,242,-28,234,-17,214],a.skin);
+    line(c,[-43,219,-47,230],'#fff1d3',5);
+    rounded(c,-11,178,24,27,a.skin,4);c.fillStyle='#74513b33';c.fillRect(-9,181,20,7);
+    poly([-21,199,-11,197,-7,206,11,206,17,197,28,204,28,226,35,248,-32,248,-26,228],'#a5dfed');
+    poly([-7,207,10,208,16,238,-20,238,-16,214],'#e6fcff',2);
+    line(c,[-25,208,-23,228,-29,243],'#4d96b4',5);line(c,[24,212,20,228,29,241],'#71bed7',4);
+    line(c,[-30,247,34,247],'#e6eff2',5);
+    // Rear hair sits behind the cheek, leaving the neck open in the centre.
+    c.save();c.translate(0,8);
+    ellipse(c,-3,103,67,70,a.hairStyle==='bald'?a.skin:a.hair);
+    if(a.hairStyle==='long'||a.hairStyle==='bob'){
+      poly([-62,92,-65,169,-53,a.hairStyle==='long'?220:175,-32,166,38,168,61,a.hairStyle==='long'?214:173,65,94],a.hair);
+    }
+    if(a.hairStyle==='curly')for(let i=0;i<10;i++){const angle=Math.PI+i*Math.PI/9;ellipse(c,Math.cos(angle)*57,98+Math.sin(angle)*52,18,19,a.hair);}
+    ellipse(c,-53,128,12,16,a.skin);
+    poly([-47,95,-28,75,31,74,51,99,52,139,39,164,17,177,-15,173,-43,157,-50,130],a.skin,4);
+    c.save();c.globalAlpha=.13;poly([-43,126,-35,152,-12,166,20,173,-15,172,-43,156], '#76563e',0);c.restore();
+    const blink=time>0&&!attack&&!pose&&Math.floor(time*24)%109<3;
+    for(const [x,width]of [[-16,19],[29,23]]){
+      if(blink){line(c,[x-width/2,133,x+width/2,133],'#252824',4);continue;}
+      rounded(c,x-width/2,112,width,35,'#fff7e5',3,false);
+      rounded(c,x-5,116,13,28,'#4d514b',2,false);rounded(c,x-3,116,9,19,'#1e2527',1,false);
+      rounded(c,x-3,116,5,9,'#ffffff',0,false);rounded(c,x+3,137,3,5,'#e9f8fd',0,false);
+      line(c,[x-width/2-2,114,x-5,108,x+width/2,109,x+width/2,141],'#202521',4);
+      line(c,[x-4,145,x+7,145],'#8b7355',2);
+    }
+    line(c,[9,145,12,146],'#ad855d',2);
+    if(attack||pose==='uppercut')rounded(c,6,155,11,8,'#9c6252',2);else line(c,[5,158,13,158],'#5d4934',3);
+    // The swept style follows the long side fringe and irregular tips of the supplied reference.
+    if(a.hairStyle!=='bald'){
+      if(a.hairStyle==='swept')poly([-64,106,-66,76,-54,52,-29,34,8,31,20,39,39,35,35,45,52,53,58,66,45,62,59,82,53,104,44,86,33,67,18,66,10,92,5,128,-9,148,-12,109,-25,86,-28,139,-41,163,-41,138,-53,148,-52,123,-64,133],a.hair);
+      else if(a.hairStyle==='short')poly([-63,107,-61,66,-34,40,8,37,44,52,60,82,56,113,38,84,26,99,5,77,-18,100,-29,82,-45,115],a.hair);
+      else if(a.hairStyle==='curly'){for(let i=0;i<5;i++)ellipse(c,-43+i*23,84+(i%2)*9,17,19,a.hair);}
+      else poly([-63,118,-62,64,-32,41,20,40,54,64,61,115,39,87,25,118,8,91,-5,122,-15,88,-39,137,-46,165,-51,128],a.hair);
+      shine('#fff0c3');line(c,[-49,85,-43,62,-28,50],'#fff0c3',7);line(c,[-30,88,-25,65,-15,54],'#fff0c3',5);line(c,[29,49,39,57,44,70],'#fff0c3',5);c.restore();
+    }
+    c.restore();
+    // Bent front arm holds an unmistakable writing tool across the waist.
+    c.save();c.translate(35,212);c.rotate(pose==='uppercut'?-2.45:pose==='kick'?.7:attack?-1.1+attack*2.2:0);
+    poly([0,-7,15,-4,23,12,16,23,3,23,-6,11],a.skin);
+    line(c,[13,0,17,9],'#fff1d3',4);
+    if(!pose&&!emptyHands){c.save();c.translate(-5,30);c.rotate(-Math.PI/2+.12);toolDrawing(c,weapon,0,0,weapon==='pen'?.86:.8);c.restore();}
+    ellipse(c,5,24,12,10,a.skin);line(c,[1,19,1,24],'#ab835b',2);c.restore();
+    if(seated){rounded(c,-31,243,72,24,'#eee1c3',2);line(c,[-20,251,25,251],'#9e9475',2);}
+    c.restore();this.texture.needsUpdate=true;
   }
 }
 
