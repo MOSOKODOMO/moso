@@ -1,0 +1,12 @@
+node_modules/
+dist/
+development/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+public/studio100/ART-*.md
+public/studio100/accommodation-background.png
+public/studio100/lobby-background.png
+public/slime-game.ico

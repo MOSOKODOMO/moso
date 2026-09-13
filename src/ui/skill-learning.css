@@ -1,0 +1,49 @@
+/* Unlearned hotbar slots remain empty, including the first rendered frame. */
+#skill-bar:has(.skill-slot.unlearned) { background: transparent; border-color: transparent; box-shadow: none; }
+#skill-bar .skill-slot.unlearned { background: transparent; border: 1px solid #c9d8ce8a; box-shadow: inset 0 0 0 2px #172c3224; }
+#skill-bar .skill-slot.unlearned .skill-emblem { background: none; }
+#skill-bar .skill-slot.unlearned .skill-key { color: #d7e4db; background: #14252b70; border-color: #a5b8b580; }
+#skill-bar .skill-slot.unlearned .skill-state-badge,
+#skill-bar .skill-slot.unlearned .cd-overlay,
+#skill-bar .skill-slot.unlearned .skill-cooldown { display: none; }
+#skill-bar .skill-slot.unlearned .skill-status { color: #c5d7cf; }
+
+.skill-learning-section { scroll-margin-top: 12px; }
+.skill-learning-intro { margin: 2px 0 14px; max-width: 730px; color: #c1d3df; font-size: 12px; line-height: 1.6; }
+.skill-learning-card { display: flex; flex-direction: column; min-width: 0; padding: 13px; gap: 8px; border: 1px solid #758da357; border-radius: 8px; background: #1c2838; }
+.skill-learning-card.learned { border-color: #86bb9a75; background: linear-gradient(145deg, #233b3b, #1c2838); }
+.skill-learning-card-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 7px; }
+.skill-learning-card-heading b { color: #f3dfa7; font-size: 13px; }
+.skill-learning-card-heading span { color: #a8bece; font-size: 10px; }
+.skill-learning-role { color: #9bcabf; font-size: 10px; }
+.skill-learning-cost { color: #b6c7da; font-size: 10px; line-height: 1.5; }
+.skill-next-rank { color: #98b5c6; font-size: 10px; line-height: 1.55; padding-top: 7px; border-top: 1px solid #7a91a32a; }
+#stats-overlay .skill-learn-action { width: 100%; margin: auto 0 0; padding: 7px 6px; font-size: 11px; }
+#stats-overlay .skill-learn-action:disabled { opacity: .48; }
+#stats-overlay .skill-learning-section:focus { outline: 2px solid #ffe5a5; outline-offset: 2px; }
+
+#skill-unlock-notice {
+  position: absolute; right: var(--hud-edge, 18px);
+  bottom: calc(var(--skill-bottom, 20px) + var(--skill-size, 54px) + 55px);
+  width: min(340px, calc(100vw - 32px)); padding: 16px;
+  pointer-events: auto; z-index: 14; color: #e6eee6;
+  border: 1px solid #d0b47a; border-radius: 11px;
+  background: linear-gradient(135deg, #29483cf5, #172d32fa);
+  box-shadow: 0 8px 28px #091c2780;
+}
+.skill-unlock-eyebrow { color: #b8cead; font-size: 9px; font-weight: bold; letter-spacing: 1.3px; }
+#skill-unlock-title { color: #ffe3a3; font-size: 18px; margin: 7px 0; }
+.skill-unlock-copy p { font-size: 12px; line-height: 1.6; color: #ceddcc; }
+.skill-unlock-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+#skill-unlock-notice .menu-btn { margin: 0; padding: 7px 10px; font-size: 11px; }
+#skill-unlock-notice button:focus-visible { outline: 2px solid #fff0bd; outline-offset: 3px; }
+
+@media (max-width: 700px) {
+  .skill-learning-grid { grid-template-columns: 1fr; }
+  .skill-learning-card { gap: 6px; }
+  #stats-overlay .skill-learn-action { width: fit-content; min-width: 145px; margin-top: 4px; }
+}
+@media (max-height: 550px) {
+  #skill-unlock-notice { padding: 11px; bottom: 105px; }
+  #skill-unlock-title { font-size: 16px; }
+}

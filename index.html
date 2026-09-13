@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#304e41" />
+    <meta name="description" content="A Melbourne student adventure. Build your character, master nine architecture studios, and fight your way upstairs." />
+    <link rel="icon" type="image/png" href="./student-face.png" />
+    <link rel="apple-touch-icon" href="./student-face.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Fight Your Way to Heaven — A Melbourne student adventure</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="game-container"></div>
+
+      <!-- HUD overlay (HTML/CSS UI layer, expanded in later phases) -->
+      <div id="hud">
+        <div id="hud-top-left">
+          <div id="player-identity">
+            <span id="level-display">Lv <span id="level-text">1</span></span>
+            <!-- No character-name field exists yet; this is a neutral display label. -->
+            <span id="character-name">Adventurer</span>
+          </div>
+          <div id="hp-bar" class="bar">
+            <div id="hp-fill" class="fill"></div>
+            <span id="hp-text">100 / 100</span>
+          </div>
+          <div id="mp-bar" class="bar">
+            <div id="mp-fill" class="fill"></div>
+            <span id="mp-text">30 / 30</span>
+          </div>
+          <div id="buff-bar" class="hidden">BERSERK</div>
+        </div>
+
+        <div id="hud-top-right">
+          <div id="hud-actions" role="group" aria-label="Game menus"></div>
+          <div id="gold-display" aria-label="Gold">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#ddb75e" stroke="#ffe6a0" stroke-width="2"/><circle cx="12" cy="12" r="6" fill="none" stroke="#936c32"/><path d="M10 8h4m-2 0v8m-2 0h4" stroke="#795728" stroke-width="2" stroke-linecap="round"/></svg>
+            <span id="gold-text">0</span>
+          </div>
+        </div>
+
+        <div id="hud-top-center">
+          <div id="floor-label">Floor 1 — Forgotten Meadow Ruins (Prototype)</div>
+        </div>
+
+        <div id="hud-bottom">
+          <div id="exp-bar" class="bar" aria-label="Experience">
+            <div id="exp-fill" class="fill"></div>
+            <span id="exp-text">0 / 65 XP</span>
+          </div>
+        </div>
+
+        <div id="skill-bar"></div>
+        <div id="prompt" class="hidden"></div>
+        <div id="hint">A / D move &nbsp;•&nbsp; SPACE jump &nbsp;•&nbsp; J / Click attack</div>
+
+        <!-- Boss HP bar placeholder (wired up in a later phase) -->
+        <div id="boss-hud" class="hidden">
+          <div id="boss-name">BOSS</div>
+          <div id="boss-bar" class="bar">
+            <div id="boss-fill" class="fill"></div>
+          </div>
+        </div>
+
+        <div id="banner" class="hidden"></div>
+        <div id="flash"></div>
+        <div id="fade"></div>
+        <div id="float-layer"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

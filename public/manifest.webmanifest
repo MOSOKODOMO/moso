@@ -1,0 +1,10 @@
+{
+  "name": "Fight Your Way to Heaven",
+  "short_name": "Fight to Heaven",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#304e41",
+  "theme_color": "#304e41",
+  "icons": [{"src":"student-face.png","sizes":"512x512","type":"image/png","purpose":"any"}]
+}

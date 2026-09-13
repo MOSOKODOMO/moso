@@ -1,0 +1,166 @@
+/* Review pass 02: corner HUD layout. Gameplay and menu interiors are unchanged. */
+#hud {
+  --hud-edge: 14px;
+  --skill-size: 54px;
+  --skill-bottom: 30px;
+}
+
+#hud-top-left { top: var(--hud-edge); left: var(--hud-edge); width: 240px; }
+#player-identity {
+  display: flex; align-items: center; gap: 9px;
+  margin-bottom: 5px; padding: 5px 9px;
+  color: #fff0c9; background: #19372cdc;
+  border: 1px solid #a5b48b99; border-radius: 7px;
+}
+#level-display {
+  padding: 0 9px 0 0; border: 0; border-right: 1px solid #c8bb8166;
+  border-radius: 0; background: none; color: #ffe0a0; font-size: 12px;
+}
+#character-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: bold; }
+#hp-bar { width: 100%; height: 24px; }
+#mp-bar { width: 100%; }
+
+#hud-top-right {
+  top: var(--hud-edge); right: var(--hud-edge);
+  display: flex; align-items: center; gap: 10px;
+}
+#hud-actions { display: flex; align-items: center; gap: 6px; }
+#hud-actions .hud-action {
+  position: relative; top: auto; right: auto;
+  display: grid; place-items: center;
+  width: 38px; height: 38px; padding: 7px; pointer-events: auto;
+  border: 1px solid #a49469; border-radius: 9px;
+  background: #18332fed; color: #f4dfb0; cursor: pointer;
+}
+.hud-action svg { width: 23px; height: 23px; }
+#hud-actions .hud-action:hover,
+#hud-actions .hud-action[aria-expanded='true'] { background: #36594d; border-color: #e9cd8b; }
+.hud-action:focus-visible { outline: 2px solid #ffe1a0; outline-offset: 3px; }
+.hud-action-tooltip {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  width: max-content; max-width: min(220px, 75vw); padding: 7px 10px;
+  background: #12262bf5; border: 1px solid #b9a577; border-radius: 7px;
+  box-shadow: 0 5px 18px #08162055; color: #fff0cf;
+  font: 12px/1.4 'Trebuchet MS', sans-serif; text-align: left;
+  visibility: hidden; opacity: 0; pointer-events: none; z-index: 14;
+}
+.hud-action:hover .hud-action-tooltip,
+.hud-action:focus-visible .hud-action-tooltip { visibility: visible; opacity: 1; }
+#gold-display {
+  display: flex; align-items: center; gap: 7px;
+  min-height: 38px; padding: 0 12px;
+  background: #122321eb; border: 1px solid #a49469; border-radius: 9px;
+  color: #ffe1a0; font-size: 14px; font-variant-numeric: tabular-nums;
+}
+#gold-display svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+#hud-bottom {
+  bottom: 12px; left: var(--hud-edge); transform: none;
+  display: block; width: min(360px, calc(100vw - 250px));
+}
+#exp-bar { width: 100%; height: 16px; border-width: 1px; border-color: #d4c59a; border-radius: 5px; }
+#exp-bar span { font-size: 10px; }
+#hint {
+  bottom: 39px; left: var(--hud-edge); transform: none;
+  max-width: calc(100vw - 250px); white-space: normal;
+  color: #f4ecd9; font-size: 11px; line-height: 1.5;
+  text-shadow: 0 1px 3px #081720, 0 1px 5px #081720;
+}
+#prompt {
+  bottom: 40px; left: var(--hud-edge); transform: none;
+  max-width: calc(100vw - 240px); white-space: normal;
+  padding: 6px 10px; background: #15272bea;
+  border: 1px solid #d9bb72; border-radius: 7px;
+  color: #ffe3a2; font-size: 12px; line-height: 1.5;
+}
+#hud:has(#prompt:not(.hidden)) #hint { visibility: hidden; }
+
+#skill-bar {
+  bottom: var(--skill-bottom); right: var(--hud-edge); left: auto; transform: none;
+  display: flex; width: auto; gap: 5px; padding: 5px;
+  background: #122023ed; border: 1px solid #a49469; border-radius: 12px;
+  box-shadow: 0 3px 0 #122023, 0 5px 14px #08162055;
+}
+.skill-slot {
+  --skill-accent: #72e4cd;
+  width: var(--skill-size); height: var(--skill-size);
+  pointer-events: auto; overflow: visible;
+  border: 1px solid #6e9285; border-radius: 8px;
+  background: linear-gradient(145deg, #355853, #162d32); color: #fff4d2;
+}
+.skill-slot[data-skill='bolt'] { --skill-accent: #acbfff; background: linear-gradient(145deg, #465470, #202d43); }
+.skill-slot[data-skill='heal'] { --skill-accent: #ff9986; background: linear-gradient(145deg, #713f4a, #352635); }
+.skill-slot:hover, .skill-slot:focus-visible { outline: 2px solid #ffe1a0; outline-offset: 2px; }
+.skill-emblem {
+  inset: 3px 4px 7px; transform: none; width: auto; height: auto; border-radius: 5px;
+}
+.skill-key {
+  top: auto; bottom: -1px; left: -1px; max-width: calc(100% - 6px);
+  padding: 0 4px; line-height: 13px; font-size: 9px;
+  background: #14252b; color: #ffe1a0; border: 1px solid #a49469; border-radius: 3px;
+}
+.skill-cooldown { font-size: 17px; }
+.skill-state-badge {
+  position: absolute; bottom: 0; right: 1px;
+  font-size: 8px; font-weight: bold; line-height: 12px;
+  color: #ffbcad; background: #39262c; border-radius: 3px; padding: 0 2px;
+}
+.skill-state-badge:empty { display: none; }
+.skill-slot.no-mana, .skill-slot.locked { border-color: #c58679; }
+.skill-slot.no-mana .skill-art, .skill-slot.locked .skill-art { opacity: 0.4; filter: saturate(0.3); }
+.skill-tooltip {
+  position: fixed; right: var(--hud-edge);
+  bottom: calc(var(--skill-bottom) + var(--skill-size) + 51px);
+  width: min(270px, calc(100vw - 28px)); padding: 12px 14px;
+  border: 1px solid #b9a577; border-radius: 10px; background: #13262bf5;
+  box-shadow: 0 7px 24px #07151a66; color: #e4e8df;
+  text-align: left; font-size: 12px; line-height: 1.5;
+  visibility: hidden; opacity: 0; pointer-events: none; z-index: 14;
+}
+.skill-slot:hover .skill-tooltip,
+.skill-slot:focus-visible .skill-tooltip { visibility: visible; opacity: 1; }
+.skill-tooltip .skill-name {
+  display: inline; position: static; width: auto;
+  color: #ffe4ac; font-size: 14px; white-space: normal;
+}
+.skill-tooltip .skill-lv { position: static; float: right; color: #b7cac2; font-size: 10px; }
+.skill-detail { margin: 5px 0; }
+.skill-tooltip .skill-status {
+  position: static; width: auto; text-align: left;
+  color: var(--skill-accent); font-size: 11px; line-height: 1.5;
+}
+.skill-slot.no-mana .skill-status, .skill-slot.locked .skill-status { color: #ffb4a2; }
+#auto-skill-btn {
+  bottom: calc(var(--skill-bottom) + var(--skill-size) + 17px);
+  right: var(--hud-edge); left: auto; transform: none;
+  padding: 3px 9px; border-radius: 6px; font-size: 9px; letter-spacing: 0;
+}
+
+@media (max-width: 900px) {
+  #hud-top-center { top: 108px; }
+  #floor-label { padding: 4px 10px; font-size: 12px; }
+  #boss-hud { top: 145px; }
+}
+@media (max-width: 600px) {
+  #hud { --hud-edge: 10px; --skill-size: 46px; }
+  #hud-top-left { width: 168px; }
+  #hp-bar { height: 21px; }
+  #mp-bar { height: 17px; }
+  #player-identity { gap: 5px; padding: 4px 6px; }
+  #character-name { font-size: 11px; }
+  #level-display { font-size: 10px; padding-right: 5px; }
+  #hud-top-right { gap: 6px; }
+  #hud-actions { gap: 4px; }
+  #hud-actions .hud-action { width: 32px; height: 32px; padding: 5px; }
+  .hud-action svg { width: 21px; height: 21px; }
+  #gold-display { min-height: 32px; gap: 4px; font-size: 12px; padding: 0 7px; }
+  #gold-display svg { width: 16px; height: 16px; }
+  #hud-bottom { width: calc(100vw - 205px); }
+  #hint, #prompt { max-width: calc(100vw - 205px); font-size: 10px; }
+}
+@media (max-width: 400px) {
+  #hud-top-left { width: 140px; }
+  #hud-top-right { gap: 4px; }
+  #hud-actions .hud-action { width: 29px; height: 30px; }
+  #gold-display { padding: 0 5px; }
+}
