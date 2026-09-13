@@ -346,7 +346,7 @@ export class StudioGame {
     if(this.modal==='character') {
       if(action==='random-character') {const pick=<T,>(values:readonly T[])=>values[Math.floor(Math.random()*values.length)];this.characterDraft={sex:pick(['male','female'] as const),hairStyle:pick(HAIR_STYLES),skin:pick(SKIN_COLOURS),hair:pick(HAIR_COLOURS)};this.open('character');return;}
       if(action==='save-character') {this.state.appearance={...this.characterDraft};this.state.characterCreated=true;this.studentArt.setAppearance(this.state.appearance);this.persist();this.close();this.refresh();return;}
-      if(action.startsWith('appearance:')) {const [,key,value]=action.split(':');if(['sex','hairStyle','skin','hair'].includes(key)){this.characterDraft=sanitizeAppearance({...this.characterDraft,[key]:value});this.open('character');}return;}
+      if(action.startsWith('appearance:')) {const [,key,value]=action.split(':');if(['sex','hairStyle','skin','hair'].includes(key)){this.characterDraft=sanitizeAppearance({...this.characterDraft,...(key==='sex'?{hairStyle:value==='female'?'bob':'short',hair:'#e7dfe5'}:{}),[key]:value});this.open('character');}return;}
       if(action==='close' && this.state.characterCreated){this.close();return;}
       return;
     }

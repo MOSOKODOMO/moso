@@ -158,7 +158,7 @@ export class StudentSprite {
   }
   /** Reference-led player silhouette: visible neck, separate torso/hips and planted boots. */
   private paintPlayer(time:number,walking:boolean,weapon:Weapon,attack:number,seated:boolean,pose:'uppercut'|'kick'|'dodge'|null,emptyHands:boolean):void {
-    const c=this.c,a=this.appearance,step=walking?Math.sin(time*12)*12:0;
+    const c=this.c,a=this.appearance,girl=a.sex==='female',step=walking?Math.sin(time*12)*12:0;
     c.clearRect(0,0,130,165);c.save();c.scale(.5,.5);c.translate(122,0);
     c.translate(0,walking?-Math.abs(step)*.2:Math.sin(time*2)*1);
     if(pose==='dodge'){c.translate(0,73);c.scale(1.08,.77);}
@@ -166,19 +166,27 @@ export class StudentSprite {
     const shine=(colour:string,alpha=.28)=>{c.save();c.globalAlpha=alpha;c.strokeStyle=colour;c.lineWidth=7;c.lineCap='butt';};
     // Legs remain distinct from shorts, including during the side kick.
     c.save();c.translate(-22,267+step);c.rotate(seated?1:walking?-.2: .24);
-    rounded(c,-13,0,26,33,a.skin,5);rounded(c,-17,24,37,25,'#735b37',4);line(c,[-14,44,19,44],'#382f22',5);line(c,[-11,28,5,28],'#c3a473',4);c.restore();
+    rounded(c,-13,0,26,33,a.skin,5);rounded(c,-17,girl?16:33,37,girl?33:16,girl?'#ddc45b':'#f6f3e7',4);line(c,[-14,44,19,44],girl?'#88713f':'#8e9d97',4);line(c,[-11,girl?21:38,5,girl?21:38],girl?'#fff1a0':'#ffffff',3);c.restore();
     c.save();c.translate(19,268-step);c.rotate(pose==='kick'?-1.3:seated?-1:walking?.2:-.13);
-    rounded(c,-12,0,24,31,a.skin,5);rounded(c,-15,23,43,25,'#82683e',4);line(c,[-13,44,25,44],'#382f22',5);line(c,[-10,28,7,28],'#d3b27a',4);c.restore();
-    poly([-32,246,32,246,35,272,5,276,0,263,-8,276,-37,268],'#40556b');
-    line(c,[-30,253,27,253],'#88acd0',5);line(c,[-5,262,-8,270],'#b5d0de',3);
+    rounded(c,-12,0,24,31,a.skin,5);rounded(c,-15,girl?15:32,43,girl?33:16,girl?'#e6cf67':'#f6f3e7',4);line(c,[-13,44,25,44],girl?'#88713f':'#8e9d97',4);line(c,[-10,girl?20:37,7,girl?20:37],girl?'#fff1a0':'#ffffff',3);c.restore();
+    if(girl){
+      poly([-28,242,28,242,40,272,23,278,0,274,-21,278,-40,271],'#87b762');
+      line(c,[-18,249,-23,269,0,272,25,268,17,250],'#d8edb3',4);
+      line(c,[-34,274,-18,280,1,277,21,280,38,274],'#f7f1d8',5);
+    }else{
+    poly([-32,246,32,246,35,272,5,276,0,263,-8,276,-37,268],'#4675b7');
+    line(c,[-30,253,27,253],'#b3d5f1',5);line(c,[-5,262,-8,270],'#d5e7f6',3);
+    }
     // Back arm and a neck that is not hidden inside the head or collar.
     poly([-25,202,-44,212,-54,232,-44,242,-28,234,-17,214],a.skin);
     line(c,[-43,219,-47,230],'#fff1d3',5);
     rounded(c,-11,178,24,27,a.skin,4);c.fillStyle='#74513b33';c.fillRect(-9,181,20,7);
-    poly([-21,199,-11,197,-7,206,11,206,17,197,28,204,28,226,35,248,-32,248,-26,228],'#a5dfed');
-    poly([-7,207,10,208,16,238,-20,238,-16,214],'#e6fcff',2);
-    line(c,[-25,208,-23,228,-29,243],'#4d96b4',5);line(c,[24,212,20,228,29,241],'#71bed7',4);
-    line(c,[-30,247,34,247],'#e6eff2',5);
+    poly([-21,199,-11,197,-7,206,11,206,17,197,28,204,28,226,35,248,-32,248,-26,228],girl?'#a8d783':'#faf9ef');
+    poly([-7,207,10,208,16,238,-20,238,-16,214],girl?'#def0bc':'#ffffff',2);
+    line(c,[-25,208,-23,228,-29,243],girl?'#65954d':'#b7c3c6',5);line(c,[24,212,20,228,29,241],girl?'#bce58a':'#d4dedf',4);
+    line(c,[-30,247,34,247],girl?'#f4e8c4':'#e6eff2',5);
+    if(girl){poly([-12,199,0,209,-10,218,-22,204],'#fff5df',2);poly([13,199,0,209,10,218,23,204],'#fff5df',2);ellipse(c,0,215,4,5,'#d9b669',false);}
+    else{poly([-12,198,0,207,-8,218,-21,202],'#ffffff',2);poly([13,198,0,207,9,218,22,203],'#ffffff',2);line(c,[0,212,0,232],'#8a9b9f',2);ellipse(c,3,221,2,2,'#64767c',false);}
     // Rear hair sits behind the cheek, leaving the neck open in the centre.
     c.save();c.translate(0,8);
     ellipse(c,-3,103,67,70,a.hairStyle==='bald'?a.skin:a.hair);
@@ -187,26 +195,33 @@ export class StudentSprite {
     }
     if(a.hairStyle==='curly')for(let i=0;i<10;i++){const angle=Math.PI+i*Math.PI/9;ellipse(c,Math.cos(angle)*57,98+Math.sin(angle)*52,18,19,a.hair);}
     ellipse(c,-53,128,12,16,a.skin);
-    poly([-47,95,-28,75,31,74,51,99,52,139,39,164,17,177,-15,173,-43,157,-50,130],a.skin,4);
+    poly(girl?[-47,95,-28,75,31,74,51,99,52,139,38,161,14,171,-13,170,-39,158,-50,130]:[-47,95,-28,75,31,74,51,99,52,139,39,164,17,177,-15,173,-43,157,-50,130],a.skin,4);
     c.save();c.globalAlpha=.13;poly([-43,126,-35,152,-12,166,20,173,-15,172,-43,156], '#76563e',0);c.restore();
     const blink=time>0&&!attack&&!pose&&Math.floor(time*24)%109<3;
-    for(const [x,width]of [[-16,19],[29,23]]){
+    for(const [x,width]of (girl?[[-22,27],[26,27]]:[[-16,19],[29,23]])){
       if(blink){line(c,[x-width/2,133,x+width/2,133],'#252824',4);continue;}
       rounded(c,x-width/2,112,width,35,'#fff7e5',3,false);
       rounded(c,x-5,116,13,28,'#4d514b',2,false);rounded(c,x-3,116,9,19,'#1e2527',1,false);
       rounded(c,x-3,116,5,9,'#ffffff',0,false);rounded(c,x+3,137,3,5,'#e9f8fd',0,false);
       line(c,[x-width/2-2,114,x-5,108,x+width/2,109,x+width/2,141],'#202521',4);
       line(c,[x-4,145,x+7,145],'#8b7355',2);
+      if(girl){line(c,[x-width/2-2,114,x-width/2-6,109],'#292924',3);ellipse(c,x,151,10,3,'#d7998580',false);}
     }
     line(c,[9,145,12,146],'#ad855d',2);
     if(attack||pose==='uppercut')rounded(c,6,155,11,8,'#9c6252',2);else line(c,[5,158,13,158],'#5d4934',3);
     // The swept style follows the long side fringe and irregular tips of the supplied reference.
     if(a.hairStyle!=='bald'){
       if(a.hairStyle==='swept')poly([-64,106,-66,76,-54,52,-29,34,8,31,20,39,39,35,35,45,52,53,58,66,45,62,59,82,53,104,44,86,33,67,18,66,10,92,5,128,-9,148,-12,109,-25,86,-28,139,-41,163,-41,138,-53,148,-52,123,-64,133],a.hair);
-      else if(a.hairStyle==='short')poly([-63,107,-61,66,-34,40,8,37,44,52,60,82,56,113,38,84,26,99,5,77,-18,100,-29,82,-45,115],a.hair);
+      else if(a.hairStyle==='short')poly([-63,107,-69,93,-62,78,-73,80,-57,62,-62,55,-39,45,-43,36,-12,39,6,28,4,39,29,39,39,51,53,50,49,63,63,76,55,80,61,103,50,120,40,87,27,101,17,79,-1,96,-10,85,-30,107,-28,91,-48,115,-46,101],a.hair);
       else if(a.hairStyle==='curly'){for(let i=0;i<5;i++)ellipse(c,-43+i*23,84+(i%2)*9,17,19,a.hair);}
+      else if(girl&&a.hairStyle==='bob'){
+        poly([-63,122,-62,72,-51,52,-30,38,13,37,40,48,57,71,61,123,51,148,41,154,47,113,37,90,29,105,15,101,11,91,3,104,-9,102,-16,92,-24,105,-37,101,-42,90,-48,115,-44,151,-56,142],a.hair);
+        line(c,[-35,56,-37,76,-33,91],'#ad91a466',3);line(c,[-13,49,-14,70,-11,90],'#ad91a433',3);
+      }
       else poly([-63,118,-62,64,-32,41,20,40,54,64,61,115,39,87,25,118,8,91,-5,122,-15,88,-39,137,-46,165,-51,128],a.hair);
-      shine('#fff0c3');line(c,[-49,85,-43,62,-28,50],'#fff0c3',7);line(c,[-30,88,-25,65,-15,54],'#fff0c3',5);line(c,[29,49,39,57,44,70],'#fff0c3',5);c.restore();
+      if(!girl&&a.hair==='#e7dfe5'){line(c,[39,61,47,77,46,94],'#cb9cac',9);line(c,[22,49,31,62,33,80],'#e2b9c4',7);}
+      shine(girl?'#ffffff':'#fff8f5',girl?.5:.45);line(c,[-49,85,-43,62,-28,50],girl?'#ffffff':'#fff8f5',7);line(c,[-30,88,-25,65,-15,54],girl?'#ffffff':'#fff8f5',5);line(c,[29,49,39,57,44,70],girl?'#fffafa':'#fff8f5',5);c.restore();
+      if(girl){poly([-45,52,-66,40,-69,58,-48,63],'#dfc6ca',3);poly([-44,51,-32,33,-23,47,-42,62],'#eedbe0',3);ellipse(c,-45,55,7,7,'#f5e6c8');}
     }
     c.restore();
     // Bent front arm holds an unmistakable writing tool across the waist.
