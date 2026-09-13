@@ -13,9 +13,12 @@ import { CombatEffects } from './CombatEffects';
 import { SceneTransition } from './SceneTransition';
 import { ClassroomArena } from './ClassroomArena';
 import { TeacherBrain, type TeacherMove } from './TeacherBrain';
+import { TeachingMotion } from './TeachingMotion';
 import { TEACHERS, teacherById, type Teacher } from './Teachers';
-import { HAIR_STYLES, HAIR_COLOURS, SKIN_COLOURS, sanitizeAppearance, defaultAppearance, type CharacterAppearance } from './CharacterAppearance';
+import { HAIR_STYLES, HAIR_COLOURS, SKIN_COLOURS, EYE_STYLES, EYE_COLOURS, OUTFITS, OUTFIT_COLOURS, ACCESSORIES, sanitizeAppearance, defaultAppearance, starterLook, type CharacterAppearance } from './CharacterAppearance';
+import { dressingRoom, type WardrobeTab, type PreviewPose } from './DressingRoom';
 import './studio.css';
+import './dressing-room.css';
 
 const FLOOR = STUDIO_GROUND;
 const MENU_BINDINGS: Partial<Record<ActionName,string>> = {moveLeft:'Move left',moveRight:'Move right',jump:'Jump',attack:'Attack',interact:'Interact / grab / throw',skill1:'Uppercut',skill2:'Jump kick',skill3:'Dodge',stats:'Drop through platform'};
@@ -59,8 +62,17 @@ export class StudioGame {
   private exhibitionFight = false;
   private portraits = new Map<string, string>();
   private characterDraft: CharacterAppearance = defaultAppearance();
+  private wardrobeTab: WardrobeTab = 'hair';
+  private previewPose: PreviewPose = 'idle';
+  private previewFacing=1;
+  private creatorArt=new StudentSprite();
+  private creatorThumbnails=new Map<string,string>();
+  private creatorPaintTime=0;
   private arena: ClassroomArena;
   private brain = new TeacherBrain();
+  private teaching = new TeachingMotion();
+  private teachingFacing = -1;
+  private teachingGesture = 0;
   private specialCooldown = {uppercut:0,kick:0,dodge:0};
   private special: {kind:'uppercut'|'kick';remaining:number;facing:number} | null = null;
   private specialPose: 'uppercut'|'kick'|null = null;
@@ -208,7 +220,8 @@ export class StudioGame {
     window.addEventListener('keydown', event => {
       if (event.repeat) return;
       if (this.transition.active) return;
-      if (this.modal) { if (event.key === 'Tab') this.trapFocus(event); return; }
+      if (this.modal) { if (event.key === 'Tab') this.trapFocus(event);
+        if(this.modal==='character'&&(event.target as HTMLElement)?.getAttribute('role')==='tab'&&['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();const tabs:WardrobeTab[]=['hair','face','outfit','extras'];const index=tabs.indexOf(this.wardrobeTab);const next=event.key==='Home'?0:event.key==='End'?3:(index+(event.key==='ArrowRight'?1:3))%4;this.wardrobeTab=tabs[next];this.open('character');this.el('wardrobe-tab-'+this.wardrobeTab).focus();}return; }
       if (!this.classElapsed && this.sleepElapsed === null && ['Digit1', 'Digit2', 'Digit3'].includes(event.code)) this.equip((['pen', 'ruler', 'cup'] as Weapon[])[Number(event.code.slice(-1)) - 1]);
       if (event.code === 'KeyM' && !this.fight && this.classElapsed === null && this.sleepElapsed === null) this.action('map');
     });
@@ -283,6 +296,7 @@ export class StudioGame {
     this.state.place = place; this.hero.x = place === 'studio' ? 12.3 : 14; this.hero.y = FLOOR; this.hero.hp = this.state.stamina;
     this.instructorArt.setTeacher(this.currentTeacher());
     this.boss.x = 24; this.boss.y = FLOOR; this.boss.hp = 160;
+    this.teaching.reset(this.currentTeacher().id); this.teachingFacing = -1; this.teachingGesture = 0;
     this.background.material.map = this.backgrounds.get(place)!; this.background.material.color.set('#ffffff'); this.background.material.needsUpdate = true;
     this.background.scale.set(place==='lobby'?2:1,1,1); this.background.position.x=place==='lobby'?32:16;
     this.chair.visible = place === 'studio'; this.bossMesh.visible = place === 'studio'; this.bossShadow.visible = place === 'studio';
@@ -325,7 +339,12 @@ export class StudioGame {
     if (this.state.place === 'foyer') return this.hero.x < 5 ? 'exit' : 'map';
     if (this.state.place === 'home') return this.hero.x < 4 ? 'exit' : 'home';
     if (this.state.place === 'skills' || this.state.place === 'tools') return this.hero.x<5 ? 'map' : Math.abs(this.hero.x-22)<5 ? this.state.place : 'workshopfloor';
-    if (this.state.place === 'studio') { if (Math.abs(this.hero.x - 10) < 3) return 'chair'; if (Math.abs(this.hero.x - 24) < 3) return 'instructor'; return this.hero.x < 5 ? 'exit' : 'map'; }
+    if (this.state.place === 'studio') {
+      const teacherDistance=Math.abs(this.hero.x-this.boss.x),chairDistance=Math.abs(this.hero.x-10);
+      if(teacherDistance<3 && Math.abs(this.hero.y-this.boss.y)<2.5 && teacherDistance<chairDistance)return 'instructor';
+      if(chairDistance<3)return 'chair';
+      return this.hero.x<5?'exit':'map';
+    }
     return this.state.place;
   }
   private action(action: string): void {
@@ -344,9 +363,13 @@ export class StudioGame {
       });return;}
     }
     if(this.modal==='character') {
-      if(action==='random-character') {const pick=<T,>(values:readonly T[])=>values[Math.floor(Math.random()*values.length)];this.characterDraft={sex:pick(['male','female'] as const),hairStyle:pick(HAIR_STYLES),skin:pick(SKIN_COLOURS),hair:pick(HAIR_COLOURS)};this.open('character');return;}
+      if(action==='random-character') {const pick=<T,>(values:readonly T[])=>values[Math.floor(Math.random()*values.length)];this.characterDraft={sex:pick(['male','female'] as const),hairStyle:pick(HAIR_STYLES),skin:pick(SKIN_COLOURS),hair:pick(HAIR_COLOURS),eyeStyle:pick(EYE_STYLES),eyes:pick(EYE_COLOURS),outfit:pick(OUTFITS),outfitColour:pick(OUTFIT_COLOURS),accessory:pick(ACCESSORIES)};this.open('character');return;}
+      if(action.startsWith('wardrobe-tab:')){const tab=action.slice(13) as WardrobeTab;if(['hair','face','outfit','extras'].includes(tab)){this.wardrobeTab=tab;this.open('character');}return;}
+      if(action==='preview-turn'){this.previewFacing*=-1;this.updateCreatorPreview();return;}
+      if(action.startsWith('preview-pose:')){const pose=action.slice(13) as PreviewPose;if(['idle','walk','attack'].includes(pose)){this.previewPose=pose;this.open('character');}return;}
+      if(action.startsWith('look-preset:')){const preset=action.slice(12);if(preset==='classic'||preset==='meadow'||preset==='midnight'){this.characterDraft=starterLook(preset,this.characterDraft.skin);this.open('character');}return;}
       if(action==='save-character') {this.state.appearance={...this.characterDraft};this.state.characterCreated=true;this.studentArt.setAppearance(this.state.appearance);this.persist();this.close();this.refresh();return;}
-      if(action.startsWith('appearance:')) {const [,key,value]=action.split(':');if(['sex','hairStyle','skin','hair'].includes(key)){this.characterDraft=sanitizeAppearance({...this.characterDraft,...(key==='sex'?{hairStyle:value==='female'?'bob':'short',hair:'#e7dfe5'}:{}),[key]:value});this.open('character');}return;}
+      if(action.startsWith('appearance:')) {const [,key,value]=action.split(':');if(['sex','hairStyle','skin','hair','eyeStyle','eyes','outfit','outfitColour','accessory'].includes(key)){this.characterDraft=sanitizeAppearance({...this.characterDraft,[key]:value});this.open('character');}return;}
       if(action==='close' && this.state.characterCreated){this.close();return;}
       return;
     }
@@ -429,6 +452,17 @@ export class StudioGame {
     this.modal = null; if (this.ui) this.el('s-modal-root').innerHTML = ''; this.input?.clearQueues();
     this.previousFocus?.focus(); this.previousFocus = null;
   }
+  private characterThumbnail(look:CharacterAppearance):string {
+    const key=JSON.stringify(look),cached=this.creatorThumbnails.get(key);if(cached)return cached;
+    const art=new StudentSprite();art.setAppearance(look);art.paint(0,false,'pen',0,false,null,true);
+    const url=art.canvas.toDataURL();art.texture.dispose();
+    if(this.creatorThumbnails.size>160)this.creatorThumbnails.clear();this.creatorThumbnails.set(key,url);return url;
+  }
+  private updateCreatorPreview():void {
+    const cycle=this.time%1.5,attack=this.previewPose==='attack'&&cycle<.4?(1-cycle/.4)*.8:0;
+    this.creatorArt.paint(this.time,this.previewPose==='walk','pen',attack);
+    this.creatorArt.canvas.style.transform='scaleX('+this.previewFacing+')';
+  }
   private currentTeacher(): Teacher {
     return teacherById(this.state.studio === 9 && this.state.cleared.every(Boolean) && this.selectedProfessor ? this.selectedProfessor : this.state.teacherAssignments[this.state.studio-1]);
   }
@@ -441,7 +475,8 @@ export class StudioGame {
     if (!modal || this.transition.active) return;
     if (this.classElapsed !== null || this.sleepElapsed !== null) { if (modal !== 'pause') return; }
     const preserveCreator=modal==='character'&&this.modal==='character';
-    const creatorScroll=preserveCreator?this.ui.querySelector('.character-modal')?.scrollTop??0:0;
+    const creatorPanel=this.ui.querySelector('.wardrobe-content');
+    const creatorScroll=preserveCreator&&creatorPanel?.getAttribute('aria-labelledby')==='wardrobe-tab-'+this.wardrobeTab?creatorPanel.scrollTop:0;
     const creatorFocus=preserveCreator?(document.activeElement as HTMLElement)?.dataset.action:undefined;
     if (!this.modal) this.previousFocus = document.activeElement as HTMLElement;
     this.modal = modal; this.input.clearQueues();
@@ -449,13 +484,8 @@ export class StudioGame {
     const s = this.state, i = s.studio - 1, cost = classCost(s), cleared = s.cleared[i], teacher = this.currentTeacher();
     let title = '', eyebrow = '', body = '';
     if (modal === 'character') {
-      eyebrow='FIGHT YOUR WAY TO HEAVEN';title='Your story<br>starts here.';
-      const draft=this.characterDraft;
-      const portrait=(look:CharacterAppearance)=>{const art=new StudentSprite();art.setAppearance(look);art.paint(0,false,'pen');const image=art.canvas.toDataURL();art.texture.dispose();return image;};
-      const preview=portrait(draft);
-      const choices=(key:string,values:readonly string[],swatches=false)=>values.map((value,n)=>`<button data-action="appearance:${key}:${value}" aria-label="${swatches?key+' colour '+(n+1):value}" aria-pressed="${draft[key as keyof CharacterAppearance]===value}" class="${swatches?'colour-swatch':''}" ${swatches?`style="--swatch:${value}"`:''}>${swatches?'':value[0].toUpperCase()+value.slice(1)}</button>`).join('');
-      const hairCards=HAIR_STYLES.map(value=>`<button class="hair-card" data-action="appearance:hairStyle:${value}" aria-label="${value}" aria-pressed="${draft.hairStyle===value}"><div class="hair-portrait"><img src="${portrait({...draft,hairStyle:value})}" alt=""></div><span>${value[0].toUpperCase()+value.slice(1)}</span></button>`).join('');
-      body=`<div class="character-creator"><div class="character-preview"><p class="creator-story">A little corner of Melbourne.<br>A whole semester ahead of you.</p><div class="character-stage"><i aria-hidden="true"></i><img src="${preview}" alt="Live preview of your student"></div><div class="student-card"><span>ARCHITECTURE STUDENT</span><strong>Ready for your first brief?</strong><small>LV ${s.level} · Nine studios. Your own way up.</small></div><button class="random-look" data-action="random-character">↻ &nbsp; Surprise me</button></div><div class="character-options"><div class="creator-options-heading"><span class="eyebrow">BEFORE YOUR FIRST CLASS</span><h2>Make it you.</h2><p>Find your look. Then find your way upstairs.</p></div><fieldset class="sex-options"><legend>Sex</legend><div>${choices('sex',['male','female'])}</div></fieldset><fieldset><legend>Hairstyle <small>Keep it simple. Keep it yours.</small></legend><div class="hair-choices">${hairCards}</div></fieldset><fieldset><legend>Skin colour</legend><div>${choices('skin',SKIN_COLOURS,true)}</div></fieldset><fieldset><legend>Hair colour</legend><div>${choices('hair',HAIR_COLOURS,true)}</div></fieldset><div class="creator-confirm"><button class="primary" data-action="save-character">${s.characterCreated?'Save my look':'Let’s start the semester'} <span>↗</span></button><p>You can change your look later in the game menu.</p></div></div></div>`;
+      eyebrow='CHARACTER CREATION';title='Dressing room';
+      body=dressingRoom(this.characterDraft,this.wardrobeTab,s.characterCreated,s.level,this.previewPose,look=>this.characterThumbnail(look));
     } else if (modal === 'faculty') {
       eyebrow = 'THE PROFESSOR ARCHIVE · 33 CHARACTERS'; title = 'Meet your studio teachers.';
       const unlocked = s.cleared.every(Boolean);
@@ -517,11 +547,12 @@ export class StudioGame {
     if(modal==='clerk') body += '<button data-action="browse-supplies">Everyday supplies · sneakers & lunch →</button>';
     if(modal==='pause' && !this.fight && this.classElapsed===null && this.sleepElapsed===null) body += '<button data-action="faculty">Professor archive ↗</button>';
     if(modal==='pause' && !this.fight && this.classElapsed===null && this.sleepElapsed===null) body += '<button data-action="character">Edit character ↗</button>';
-    this.el('s-modal-root').innerHTML = `<div class="studio-modal-backdrop ${modal==='character'?'character-backdrop':''}"><section class="studio-modal ${modal==='faculty'?'faculty-modal':modal==='character'?'character-modal':''}" role="dialog" aria-modal="true" aria-labelledby="s-modal-title"><header><div><span class="eyebrow">${eyebrow}</span><h1 id="s-modal-title">${title}</h1></div>${modal==='character'&&!s.characterCreated?'':'<button class="close" aria-label="Close dialog" data-action="close">×</button>'}</header>${body}</section></div>`;
+    this.el('s-modal-root').innerHTML = `<div class="studio-modal-backdrop ${modal==='character'?'dressing-backdrop':''}"><section class="studio-modal ${modal==='faculty'?'faculty-modal':modal==='character'?'character-modal dressing-room':''}" role="dialog" aria-modal="true" aria-labelledby="s-modal-title"><header class="${modal==='character'?'dressing-header':''}"><div class="${modal==='character'?'dressing-logo':''}"><span class="eyebrow">${eyebrow}</span><h1 id="s-modal-title">${title}</h1></div>${modal==='character'?'<span class="dressing-step">✦ YOUR LOOK · YOUR ADVENTURE</span>':''}${modal==='character'&&!s.characterCreated?'':'<button class="close" aria-label="Close dialog" data-action="close">×</button>'}</header>${body}</section></div>`;
+    if(modal==='character'){this.creatorArt.setAppearance(this.characterDraft);const stage=this.ui.querySelector('.avatar-stage');if(stage){stage.replaceChildren(this.creatorArt.canvas);this.creatorArt.canvas.setAttribute('role','img');this.creatorArt.canvas.setAttribute('aria-label','Live character preview');}this.updateCreatorPreview();}
     const buttons=Array.from(this.el('s-modal-root').querySelectorAll<HTMLButtonElement>('button'));
     const target=creatorFocus?buttons.find(b=>b.dataset.action===creatorFocus):modal==='character'?buttons.find(b=>b.dataset.action?.startsWith('appearance:')):buttons[0];
     target?.focus({preventScroll:true});
-    if(preserveCreator){const panel=this.ui.querySelector('.character-modal');if(panel)panel.scrollTop=creatorScroll;}
+    if(preserveCreator){const panel=this.ui.querySelector('.wardrobe-content');if(panel)panel.scrollTop=creatorScroll;}
   }
   private trapFocus(event: KeyboardEvent): void {
     const items = Array.from(this.el('s-modal-root').querySelectorAll<HTMLElement>('button:not(:disabled),a[href],input:not(:disabled)'));
@@ -530,8 +561,8 @@ export class StudioGame {
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   }
-  private resetBrawler():void {
-    this.touchPointers.clear();this.touchActions.clear();
+  private resetBrawler(keepInput = false):void {
+    if(!keepInput){this.touchPointers.clear();this.touchActions.clear();}
     this.arena.reset();this.special=null;this.bossMove=null;this.specialPose=null;this.bossPose=null;
     this.specialPoseTime=this.bossPoseTime=this.heroDrop=this.bossDrop=this.heroDodge=this.bossDodge=this.comboHits=this.comboTime=this.heroCoyote=this.jumpBuffer=0;
     this.specialCooldown={uppercut:0,kick:0,dodge:0};
@@ -569,13 +600,18 @@ export class StudioGame {
       this.effects.word(move.kind==='uppercut'?'LAUNCH!':'KICK!',this.boss.x,this.boss.y+3.5);
     }
   }
-  private startFight(exhibition = false): void {
-    if (this.fight || this.state.place !== 'studio' || this.state.stamina <= 0) return;
-    if(exhibition ? !this.state.cleared.every(Boolean) || this.state.studio!==9 || !this.selectedProfessor : !!this.state.cleared[this.state.studio-1]) return;
+  private canStartFight(exhibition = false): boolean {
+    if(this.fight || this.state.place!=='studio' || this.state.stamina<=0 || this.transition.active || this.classElapsed!==null || this.sleepElapsed!==null)return false;
+    return exhibition ? this.state.studio===9 && this.state.cleared.every(Boolean) && !!this.selectedProfessor : !this.state.cleared[this.state.studio-1];
+  }
+  private startFight(exhibition = false, inPlace = false): void {
+    if(!this.canStartFight(exhibition) || (inPlace && this.modal))return;
     this.exhibitionFight = exhibition;
-    this.resetBrawler();this.brain.reset(this.currentTeacher().id);
+    this.resetBrawler(inPlace);this.brain.reset(this.currentTeacher().id,inPlace?.18:0);
     this.instructorArt.setTeacher(this.currentTeacher());
-    this.close(); this.fight = true; resetMotion(this.hero); resetMotion(this.boss); this.hero.x = 15; this.boss.x = 24;
+    if(!inPlace)this.close();
+    this.fight = true;
+    if(!inPlace){resetMotion(this.hero);resetMotion(this.boss);this.hero.x=15;this.boss.x=24;}
     this.pendingAttack = null; this.attackBuffer = 0; this.penChain = 0; this.chainWindow = 0; this.hitStop = 0; this.effects.clear();
     this.bossMax = 140 + this.state.studio * 20; this.boss.hp = this.bossMax; this.boss.defense = (this.state.studio - 1) * 3;
     this.hero.hp = this.state.stamina; this.warned = false; this.invulnerable = .5;
@@ -616,7 +652,16 @@ export class StudioGame {
     if (heavy) this.effects.dust(this.boss.x, FLOOR, 1.4);
   }
   private attack(): void {
-    if (!this.fight || this.modal || this.special || this.heroDodge>0) return;
+    if(this.modal || this.transition.active || this.classElapsed!==null || this.sleepElapsed!==null || this.special || this.heroDodge>0)return;
+    if(!this.fight){
+      const exhibition=this.state.studio===9 && this.state.cleared.every(Boolean) && !!this.selectedProfessor;
+      if(!this.canStartFight(exhibition))return;
+      const dx=this.boss.x-this.hero.x,dy=this.boss.y-this.hero.y;
+      const range=inventionStats(WEAPONS[this.state.weapon],this.state.inventions[this.state.weapon]).range;
+      if(dx*this.facing<-.3 || Math.abs(dx)>range || Math.abs(dy+.5)>2)return;
+      this.startFight(exhibition,true);
+    }
+    if(!this.fight)return;
     if (this.attackTimer > 0 || this.pendingAttack || this.hero.stun > 0) { this.attackBuffer = .15; return; }
     this.beginAttack();
   }
@@ -641,6 +686,7 @@ export class StudioGame {
   }
   private update(dt: number): void {
     this.music.update();
+    if(this.modal==='character'&&(this.creatorPaintTime+=dt)>=1/24){this.creatorPaintTime=0;this.updateCreatorPreview();}
     this.time += dt;
     if (this.transition.active) {
       if (!document.hidden) this.transition.update(dt);
@@ -668,7 +714,9 @@ export class StudioGame {
       this.input.clearQueues(); return;
     }
     if (this.classElapsed !== null) {
-      this.classElapsed += dt; this.studentArt.paint(this.time, false, this.state.weapon, 0, true);
+      this.classElapsed += dt; this.updateTeaching(dt);
+      this.instructorArt.paint(this.time+1,Math.abs(this.boss.vx)>.5,this.currentTeacher().tool,this.teachingGesture);
+      this.studentArt.paint(this.time, false, this.state.weapon, 0, true);
       this.label('s-class-title', 'A little wiser, every day.'); this.label('s-class-code', 'CLASS IN SESSION'); this.label('s-class-quote', `“${LESSONS[this.state.knowledge[this.state.studio - 1]]}”`);
       this.el('s-class-fill').style.width = `${this.classElapsed / CLASS_SECONDS * 100}%`; this.label('s-class-progress', `${Math.max(0, Math.ceil(CLASS_SECONDS - this.classElapsed))} seconds · +1 Knowledge when class ends`);
       if (this.classElapsed >= CLASS_SECONDS) {
@@ -704,6 +752,7 @@ export class StudioGame {
     this.heroFlash = Math.max(0, this.heroFlash - dt); this.bossFlash = Math.max(0, this.bossFlash - dt); this.instructorSwing = Math.max(0, this.instructorSwing - dt);
     this.chainWindow = Math.max(0, this.chainWindow - dt); if (!this.chainWindow) this.penChain = 0;
     this.attackBuffer = Math.max(0, this.attackBuffer - dt);
+    if(this.state.place==='studio'&&!this.fight)this.updateTeaching(dt);
     if (this.input.consumeAttack()||this.touchActions.delete('attack')) this.attack();
     if (this.attackBuffer > 0 && this.attackTimer <= 0 && !this.pendingAttack && !this.special && this.heroDodge<=0 && this.hero.stun <= 0 && this.fight) this.beginAttack();
     if (this.pendingAttack) { this.pendingAttack.remaining -= dt; if (this.pendingAttack.remaining <= 0) this.resolveAttack(); }
@@ -725,11 +774,17 @@ export class StudioGame {
     if (this.paintTimer <= 0) {
       this.studentArt.paint(this.time, Math.abs(this.hero.vx) > 1, this.pendingAttack?.weapon ?? this.state.weapon, this.swing > 0 ? 1 - this.swing / .28 : 0,false,this.specialPose??(this.heroDodge>0?'dodge':null),!!this.arena.held('hero'));
       if (this.state.place === 'mystery') this.clerkArt.paint(this.time + 2, false, 'pen', 0);
-      this.instructorArt.paint(this.time + 1, this.fight && Math.abs(this.boss.vx) > .5, this.currentTeacher().tool, this.instructorSwing > 0 ? 1 - this.instructorSwing / .28 : this.warned ? .12 : 0,false,this.bossPose??(this.bossDodge>0?'dodge':null),!!this.arena.held('boss')); this.paintTimer = 1 / 24;
+      this.instructorArt.paint(this.time + 1, Math.abs(this.boss.vx) > .5, this.currentTeacher().tool, this.instructorSwing > 0 ? 1 - this.instructorSwing / .28 : this.warned ? .12 : this.fight ? 0 : this.teachingGesture,false,this.bossPose??(this.bossDodge>0?'dodge':null),!!this.arena.held('boss')); this.paintTimer = 1 / 24;
     }
     this.positionActors(); this.positionLabels();
     this.uiTimer -= dt; if (this.uiTimer <= 0) { this.refresh(); this.uiTimer = .12; }
     this.saveTimer += dt; if (this.saveTimer > 3) { this.persist(); this.saveTimer = 0; }
+  }
+  private updateTeaching(dt: number): void {
+    const intent=this.teaching.update(dt,this.boss,this.hero);
+    this.teachingFacing=intent.facing;this.teachingGesture=intent.gesture;
+    stepMotion(this.boss,intent.axis,1.65,dt,30,CLASSROOM_PLATFORMS);
+    if(this.classElapsed===null)separateBodies(this.hero,this.boss);
   }
   private updateFight(dt: number): void {
     const intent=this.brain.update(dt,{hero:this.hero,boss:this.boss,tool:this.currentTeacher().tool,held:!!this.arena.held('boss'),propNear:!!this.arena.nearby(this.boss),propThreat:this.arena.threat(this.boss,'boss'),heroAttacking:!!this.pendingAttack||!!this.special,busy:!!this.bossMove});
@@ -771,7 +826,7 @@ export class StudioGame {
     (this.heroMesh.material as THREE.MeshBasicMaterial).color.set(this.heroFlash ? '#f5b49d' : '#ffffff');
     this.heroMesh.visible = this.invulnerable <= 0 || Math.floor(this.time * 14) % 2 === 0;
     this.bossMesh.position.set(this.boss.x, this.boss.y + 2.175, 1);
-    this.bossMesh.scale.set((this.fight && this.hero.x < this.boss.x ? -1 : 1) * (this.bossFlash ? 1.08 : 1), this.bossFlash ? .94 : 1, 1);
+    this.bossMesh.scale.set((this.fight ? (this.hero.x < this.boss.x ? -1 : 1) : this.teachingFacing) * (this.bossFlash ? 1.08 : 1), this.bossFlash ? .94 : 1, 1);
     this.bossMesh.rotation.z = this.boss.stun > 0 ? -Math.sign(this.boss.hitVx) * .2 : this.bossPose==='kick'?-.15:0;
     (this.bossMesh.material as THREE.MeshBasicMaterial).color.set(this.bossFlash ? '#ffd7a0' : '#ffffff');
     this.playerShadow.position.x = this.hero.x; this.bossShadow.position.x = this.boss.x;
@@ -801,7 +856,7 @@ export class StudioGame {
   private refresh(): void {
     const s = this.state, i = s.studio - 1, total = s.cleared.filter(Boolean).length;
     this.label('s-crafting-label', ['skills','tools'].includes(this.near()) ? s.place==='tools'?'E · Upgrade & invent':'E · Upgrade character' : 'Crafting table →');
-    this.el('touch-attack').hidden=!this.fight;
+    this.el('touch-attack').hidden=!this.fight && !(s.place==='studio' && this.classElapsed===null && this.sleepElapsed===null);
     this.label('touch-interact',this.fight?(this.arena.held('hero')?'Throw':'Grab'):this.near()==='home'&&s.place==='home'?'Rest':['instructor','clerk'].includes(this.near())?'Talk':'Enter');
     this.label('s-level', `LV ${s.level} · ${window.innerWidth < 1000 ? 'Student' : 'Architecture student'}`); this.label('s-stamina', `${s.stamina} / ${maxStamina(s)}`);
     this.el('s-fill').style.width = `${s.stamina / maxStamina(s) * 100}%`; this.el('s-meter').setAttribute('aria-valuenow', String(s.stamina)); this.el('s-meter').setAttribute('aria-valuemin', '0'); this.el('s-meter').setAttribute('aria-valuemax', String(maxStamina(s))); this.el('s-meter').setAttribute('aria-valuetext', `${s.stamina} of ${maxStamina(s)} stamina`);
@@ -832,9 +887,9 @@ export class StudioGame {
     const key=(action:ActionName)=>prettyKey(this.input.getBindings()[action][0]??'—');
     this.label('s-controls',`${key('moveLeft')} ${key('moveRight')} move · ${key('jump')} jump · ${key('interact')} ${this.fight?'grab / throw':'interact'} · ${this.fight?`${key('attack')} attack · ${key('skill1')} uppercut · ${key('skill2')} kick`:'M building'}`);
     const nearby = this.near();
-    this.label('s-context-hint',this.fight ? this.arena.held('hero')?'E · throw '+this.arena.held('hero')!.kind:'E · pick up '+(this.arena.nearby(this.hero)?.kind??'prop') : nearby==='home' && s.place==='home'?'E · rest':nearby==='skills'?'E · upgrade character':nearby==='tools'?'E · upgrade tool':nearby==='map'?'E · directory':nearby==='chair'?'E · class':nearby==='instructor'?'E · talk':'E · enter');
+    this.label('s-context-hint',this.fight ? this.arena.held('hero')?'E · throw '+this.arena.held('hero')!.kind:'E · pick up '+(this.arena.nearby(this.hero)?.kind??'prop') : nearby==='home' && s.place==='home'?'E · rest':nearby==='skills'?'E · upgrade character':nearby==='tools'?'E · upgrade tool':nearby==='map'?'E · directory':nearby==='chair'?'E · class':nearby==='instructor'?`${key('attack')} · hit  /  ${key('interact')} · talk`:'E · enter');
     for(const id of ['s-context-hint','s-crafting-label'])this.el(id).textContent=this.el(id).textContent!.replace(/^E ·/,`${key('interact')} ·`);
-    const labels: Record<ReturnType<StudioGame['near']>, string> = { workshopfloor:'Crafting table →', chair: s.cleared[i] ? 'Studio complete · head upstairs' : 'Take a seat · attend class', instructor: s.cleared[i] ? 'Talk to your instructor' : 'Talk to / challenge instructor', exit: 'Step outside to the lobby', map: 'Explore Building 100', shop: 'Browse the Supply Cupboard', mystery: 'Enter the mysterious shop', clerk: 'Talk to Mika', shopfloor: 'Walk right to Mika’s counter →', building: 'Enter Building 100', lobby: this.hero.x > 30 ? 'Accommodation → · keep walking right' : 'Shop ← · Building 100 → · home further right', home: s.place === 'home' ? 'Sleep & restore stamina' : 'Enter your apartment', skills: 'Improve your character', tools: 'Upgrade & invent' };
+    const labels: Record<ReturnType<StudioGame['near']>, string> = { workshopfloor:'Crafting table →', chair: s.cleared[i] ? 'Studio complete · head upstairs' : 'Take a seat · attend class', instructor: s.cleared[i] ? 'Talk to your instructor' : 'Hit to start a duel · or talk', exit: 'Step outside to the lobby', map: 'Explore Building 100', shop: 'Browse the Supply Cupboard', mystery: 'Enter the mysterious shop', clerk: 'Talk to Mika', shopfloor: 'Walk right to Mika’s counter →', building: 'Enter Building 100', lobby: this.hero.x > 30 ? 'Accommodation → · keep walking right' : 'Shop ← · Building 100 → · home further right', home: s.place === 'home' ? 'Sleep & restore stamina' : 'Enter your apartment', skills: 'Improve your character', tools: 'Upgrade & invent' };
     this.label('s-interact-text', this.fight ? `Attack with ${WEAPONS[s.weapon].name} · Space / click` : this.classElapsed !== null ? 'Class in session…' : this.sleepElapsed !== null ? 'Resting…' : labels[nearby]);
     (this.el('s-interact') as HTMLButtonElement).disabled = this.transition.active || this.classElapsed !== null || this.sleepElapsed !== null;
     this.positionLabels();

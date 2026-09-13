@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { Place, Weapon } from './StudioState';
 import type { Teacher } from './Teachers';
 import { defaultAppearance, type CharacterAppearance } from './CharacterAppearance';
+import { paintCharacter } from './CharacterRenderer';
 
 const INK = '#303430';
 export function rounded(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string | CanvasGradient, r = 8, stroke = true): void {
@@ -65,173 +66,22 @@ export function craftingTableTexture(): THREE.Texture {
 }
 
 export class StudentSprite {
-  readonly canvas: HTMLCanvasElement; private c: CanvasRenderingContext2D; readonly texture: THREE.CanvasTexture;
+  readonly canvas: HTMLCanvasElement;
+  private c: CanvasRenderingContext2D;
+  readonly texture: THREE.CanvasTexture;
   private appearance: CharacterAppearance = defaultAppearance();
-  constructor(private instructor = false, private clerk = false, private teacher?: Teacher) { [this.canvas, this.c] = canvas(130, 165); this.texture = texture(this.canvas); this.texture.minFilter=THREE.NearestFilter;this.texture.magFilter=THREE.NearestFilter; this.paint(0, false, teacher?.tool ?? 'pen'); }
-  setTeacher(teacher: Teacher): void { this.teacher = teacher; this.paint(0, false, teacher.tool); }
-  setAppearance(appearance: CharacterAppearance): void { this.appearance={...appearance};this.paint(0,false,'pen'); }
-  paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose:'uppercut'|'kick'|'dodge'|null=null, emptyHands=false): void {
-    if(!this.instructor&&!this.clerk){this.paintPlayer(time,walking,weapon,attack,seated,pose,emptyHands);return;}
-    const c = this.c, t = this.teacher ?? (!this.instructor && !this.clerk ? {...this.appearance,coat:this.appearance.sex==='female'?'#4d5662':'#374b48',glasses:'none',beard:'none'} : undefined); c.clearRect(0, 0, 130, 165); c.save(); c.scale(.5,.5);c.translate(125, 0);
-    const step = walking ? Math.sin(time * 13) * 12 : 0;
-    c.translate(0, walking ? -Math.abs(step) * .3 : Math.sin(time * 2) * 1.5);
-    if(pose==='dodge'){c.translate(0,85);c.scale(1.12,.73);}
-    // Compact body and oversized expressive head follow the supplied pixel-chibi reference.
-    c.save();c.translate(0,72);c.scale(.92,.76);
-    if (!this.clerk) { c.save(); c.translate(-46, 157); c.rotate(-.25); rounded(c, -10, -80, 21, 155, '#4b554e', 6); rounded(c, -13, -84, 27, 12, '#b9bda4', 4); c.restore(); }
-    rounded(c, -36, seated ? 246 : 255 + step, 30, seated ? 28 : 50, '#414440', 8);
-    if(pose==='kick'){rounded(c,10,253,69,25,'#414440',8);rounded(c,69,245,24,36,'#e8e2ce',6);}
-    else rounded(c, 6, seated ? 242 : 255 - step, 29, seated ? 32 : 50, '#414440', 8);
-    rounded(c, -40, (seated ? 268 : 298) + step, 40, 17, '#e8e2ce', 7);
-    if(pose!=='kick')rounded(c, 3, (seated ? 268 : 298) - step, 43, 17, '#e8e2ce', 7);
-    line(c, [-33, 304 + step, -8, 304 + step], '#9e9b8b', 2);
-    rounded(c, -47, 172, 93, 97, t?.coat ?? (this.clerk ? '#a68d78' : this.instructor ? '#9b8066' : '#343e3b'), 23);
-    c.beginPath(); c.moveTo(-25, 175); c.lineTo(0, 198); c.lineTo(27, 174); c.fillStyle = this.instructor ? '#e8ddc6' : '#58665d'; c.fill(); c.strokeStyle = INK; c.stroke();
-    line(c, [-9, 191, -9, 217], '#c4c8b2', 2); line(c, [9, 190, 9, 213], '#c4c8b2', 2);
-    line(c,[-36,220,-34,251,-14,256],'#ffffff33',5);line(c,[24,224,25,259],'#111b2844',7);
-    c.restore();
-    // Hair silhouette and oversized face.
-    c.save();c.translate(0,10);c.scale(1.12,1.17);
-    ellipse(c, -2, 104, 68, 71, t?.hairStyle === 'bald' ? t.skin : t?.hair ?? '#34322f');
-    if (t?.hairStyle === 'long' || t?.hairStyle === 'bob') rounded(c, -67, 95, 132, t.hairStyle === 'long' ? 112 : 70, t.hair, 23);
-    if (t?.hairStyle === 'curly') for(let n=0;n<11;n++){const a=Math.PI+n*Math.PI/10;ellipse(c,Math.cos(a)*59,98+Math.sin(a)*53,20,20,t.hair);}
-    if (!this.instructor && !this.clerk && this.appearance.hairStyle==='swept') { line(c, [-29,45,-40,25,-18,38,3,25,1,45],this.appearance.hair,8); }
-    ellipse(c, -55, 125, 12, 17, t?.skin ?? '#efd0aa'); ellipse(c, 53, 125, 12, 17, t?.skin ?? '#efd0aa');
-    ellipse(c, 0, 123, 55, 53, t?.skin ?? '#f5dbb6');
-    if (!t) {
-    c.beginPath(); c.moveTo(-57, 104); c.quadraticCurveTo(-65, 43, 4, 48); c.quadraticCurveTo(67, 47, 58, 112);
-    c.lineTo(33, 82); c.lineTo(22, 109); c.lineTo(4, 80); c.lineTo(-13, 111); c.lineTo(-22, 88); c.lineTo(-46, 116); c.closePath(); c.fillStyle = this.instructor ? '#655c50' : '#34322f'; c.fill(); c.strokeStyle = INK; c.stroke();
-    } else if (t.hairStyle !== 'bald') {
-      c.beginPath(); c.moveTo(-59,116); c.quadraticCurveTo(-72,40,0,43); c.quadraticCurveTo(69,40,60,116);
-      if(t.hairStyle==='short'||t.hairStyle==='swept'){c.lineTo(47,78);c.quadraticCurveTo(2,111,-39,78);}
-      else if(t.hairStyle==='curly'){c.lineTo(37,94);c.lineTo(20,81);c.lineTo(0,99);c.lineTo(-18,83);c.lineTo(-41,99);}
-      else {c.lineTo(37,84);c.quadraticCurveTo(15,139,4,87);c.quadraticCurveTo(-30,88,-49,128);}
-      c.closePath();c.fillStyle=t.hair;c.fill();c.strokeStyle=INK;c.stroke();
-    }
-    if(t?.hairStyle!=='bald') {
-      c.save();c.globalAlpha=.25;
-      line(c,[-47,80,-33,57,-15,52],'#f5e3c1',6);line(c,[-12,57,8,53,30,62],'#f5e3c1',5);line(c,[35,63,46,77],'#f5e3c1',4);
-      c.restore();
-    }
-    // Layered eyes: ivory whites, coloured irises, dark lashes and double highlights.
-    const blink = time > 0 && !attack && Math.floor(time*24)%109<3;
-    for(const x of [-21,24]) {
-      if(blink){line(c,[x-12,130,x+11,130],INK,4);continue;}
-      rounded(c,x-13,115,26,25,'#fff3dc',7,false);
-      ellipse(c,x+2,129,9,13, this.clerk?'#73629a':t?'#765b42':'#4a807b',false);
-      ellipse(c,x+2,125,6,9,'#202b35',false);ellipse(c,x+1,137,5,3,this.clerk?'#c2a1dc':'#a6c9a0',false);
-      rounded(c,x-3,117,6,7,'#fffdf4',1,false);rounded(c,x+6,127,3,4,'#fffdf4',0,false);
-      line(c,[x-15,116,x-8,112,x+8,113,x+13,117],INK,4);
-      line(c,[x-11,141,x+8,141],'#795b50',2);
-    }
-    ellipse(c, -35, 144, 9, 4, '#e9ad97', false); ellipse(c, 37, 144, 9, 4, '#e9ad97', false);
-    if(attack>0) rounded(c,-3,149,13,9,'#a76159',3); else line(c, [-4, 151, 2, 154, 8, 151], '#875f4f', 2);
-    if(t && t.beard!=='none') {
-      c.save();c.globalAlpha=t.beard==='stubble'?.3:1;
-      if(t.beard==='goatee') ellipse(c,2,161,16,16,t.hair,false);
-      else {c.beginPath();c.moveTo(-43,145);c.quadraticCurveTo(0,168,43,145);c.quadraticCurveTo(44,t.beard==='full'?220:191,0,t.beard==='full'?209:179);c.quadraticCurveTo(-40,181,-43,145);c.fillStyle=t.hair;c.fill();}
-      c.restore();line(c,[-3,155,3,158,9,155],'#875f4f',2);
-    }
-    if(this.clerk) {rounded(c,-63,46,126,39,'#756689',17);rounded(c,-65,69,130,19,'#b5a4c9',5);line(c,[-47,54,-29,49,27,49],'#d8c9e3',4);}
-    if(this.instructor && (!t || t.glasses!=='none')) {
-      const colour=t?.glasses==='red'?'#b44538':INK;c.strokeStyle=colour;c.lineWidth=4;
-      if(t?.glasses==='round'){for(const x of [-21,25]){c.beginPath();c.arc(x,126,18,0,Math.PI*2);c.stroke();}}
-      else {c.strokeRect(-40,111,36,29);c.strokeRect(8,111,36,29);}line(c,[-4,122,8,122],colour,4);
-    }
-    c.restore();
-    c.save();c.translate(0,72);c.scale(.92,.76);
-    if (this.clerk) {
-      line(c, [-22, 176, -22, 206, 26, 206, 26, 176], '#74607d', 6);
-      rounded(c, -33, 199, 67, 74, '#74607d', 8); rounded(c, -21, 215, 41, 17, '#ede1c7', 3); text(c, 'MIKA', -17, 227, 11);
-      rounded(c, -20, 243, 39, 20, '#8e7797', 4);
-    } else if (this.instructor) {
-      rounded(c,-31,226,50,21,'#e9dfc5',3);text(c,'STUDIO',-27,240,10);
-    }
-    // The student wears a simple hoodie, without the former numbered shoulder bag.
-    // Front arm and held everyday object.
-    c.save(); c.translate(37, 207); c.rotate(pose==='uppercut'?-2.8:pose==='kick'?1:attack > 0 ? -1.2 + attack * 2.4 : -.22);
-    rounded(c, -9, -5, 26, 48, t?.coat ?? (this.clerk ? '#a68d78' : this.instructor ? '#9b8066' : '#343e3b'), 10);
-    ellipse(c, 4, 46, 13, 12, t?.skin ?? '#f5dbb6');
-    c.translate(10, 40); c.rotate(-.4); if (this.clerk) { rounded(c, -15, -20, 33, 43, '#d9c8a5', 3); line(c, [-9, -9, 11, -9], '#84745b', 2); } else if(!pose&&!emptyHands) toolDrawing(c, weapon, 10, -10, attack > 0 ? 1.25 : .78); c.restore();
-    if (seated) { rounded(c, -10, 208, 69, 45, '#d9c4a0', 3); line(c, [2, 220, 42, 220], '#8f8a73', 2); line(c, [2, 230, 33, 230], '#8f8a73', 2); }
-    c.restore();c.restore(); this.texture.needsUpdate = true;
+  constructor(private instructor = false, private clerk = false, private teacher?: Teacher) {
+    [this.canvas, this.c] = canvas(130, 165);
+    this.texture = texture(this.canvas);
+    this.texture.minFilter = THREE.NearestFilter;
+    this.texture.magFilter = THREE.NearestFilter;
+    this.paint(0, false, teacher?.tool ?? 'pen');
   }
-  /** Reference-led player silhouette: visible neck, separate torso/hips and planted boots. */
-  private paintPlayer(time:number,walking:boolean,weapon:Weapon,attack:number,seated:boolean,pose:'uppercut'|'kick'|'dodge'|null,emptyHands:boolean):void {
-    const c=this.c,a=this.appearance,girl=a.sex==='female',step=walking?Math.sin(time*12)*12:0;
-    c.clearRect(0,0,130,165);c.save();c.scale(.5,.5);c.translate(122,0);
-    c.translate(0,walking?-Math.abs(step)*.2:Math.sin(time*2)*1);
-    if(pose==='dodge'){c.translate(0,73);c.scale(1.08,.77);}
-    const poly=(points:number[],fill:string,width=4)=>{c.beginPath();c.moveTo(points[0],points[1]);for(let i=2;i<points.length;i+=2)c.lineTo(points[i],points[i+1]);c.closePath();c.fillStyle=fill;c.fill();c.strokeStyle='#252824';c.lineWidth=width;c.lineJoin='round';c.stroke();};
-    const shine=(colour:string,alpha=.28)=>{c.save();c.globalAlpha=alpha;c.strokeStyle=colour;c.lineWidth=7;c.lineCap='butt';};
-    // Legs remain distinct from shorts, including during the side kick.
-    c.save();c.translate(-22,267+step);c.rotate(seated?1:walking?-.2: .24);
-    rounded(c,-13,0,26,33,a.skin,5);rounded(c,-17,girl?16:33,37,girl?33:16,girl?'#ddc45b':'#f6f3e7',4);line(c,[-14,44,19,44],girl?'#88713f':'#8e9d97',4);line(c,[-11,girl?21:38,5,girl?21:38],girl?'#fff1a0':'#ffffff',3);c.restore();
-    c.save();c.translate(19,268-step);c.rotate(pose==='kick'?-1.3:seated?-1:walking?.2:-.13);
-    rounded(c,-12,0,24,31,a.skin,5);rounded(c,-15,girl?15:32,43,girl?33:16,girl?'#e6cf67':'#f6f3e7',4);line(c,[-13,44,25,44],girl?'#88713f':'#8e9d97',4);line(c,[-10,girl?20:37,7,girl?20:37],girl?'#fff1a0':'#ffffff',3);c.restore();
-    if(girl){
-      poly([-28,242,28,242,40,272,23,278,0,274,-21,278,-40,271],'#87b762');
-      line(c,[-18,249,-23,269,0,272,25,268,17,250],'#d8edb3',4);
-      line(c,[-34,274,-18,280,1,277,21,280,38,274],'#f7f1d8',5);
-    }else{
-    poly([-32,246,32,246,35,272,5,276,0,263,-8,276,-37,268],'#4675b7');
-    line(c,[-30,253,27,253],'#b3d5f1',5);line(c,[-5,262,-8,270],'#d5e7f6',3);
-    }
-    // Back arm and a neck that is not hidden inside the head or collar.
-    poly([-25,202,-44,212,-54,232,-44,242,-28,234,-17,214],a.skin);
-    line(c,[-43,219,-47,230],'#fff1d3',5);
-    rounded(c,-11,178,24,27,a.skin,4);c.fillStyle='#74513b33';c.fillRect(-9,181,20,7);
-    poly([-21,199,-11,197,-7,206,11,206,17,197,28,204,28,226,35,248,-32,248,-26,228],girl?'#a8d783':'#faf9ef');
-    poly([-7,207,10,208,16,238,-20,238,-16,214],girl?'#def0bc':'#ffffff',2);
-    line(c,[-25,208,-23,228,-29,243],girl?'#65954d':'#b7c3c6',5);line(c,[24,212,20,228,29,241],girl?'#bce58a':'#d4dedf',4);
-    line(c,[-30,247,34,247],girl?'#f4e8c4':'#e6eff2',5);
-    if(girl){poly([-12,199,0,209,-10,218,-22,204],'#fff5df',2);poly([13,199,0,209,10,218,23,204],'#fff5df',2);ellipse(c,0,215,4,5,'#d9b669',false);}
-    else{poly([-12,198,0,207,-8,218,-21,202],'#ffffff',2);poly([13,198,0,207,9,218,22,203],'#ffffff',2);line(c,[0,212,0,232],'#8a9b9f',2);ellipse(c,3,221,2,2,'#64767c',false);}
-    // Rear hair sits behind the cheek, leaving the neck open in the centre.
-    c.save();c.translate(0,8);
-    ellipse(c,-3,103,67,70,a.hairStyle==='bald'?a.skin:a.hair);
-    if(a.hairStyle==='long'||a.hairStyle==='bob'){
-      poly([-62,92,-65,169,-53,a.hairStyle==='long'?220:175,-32,166,38,168,61,a.hairStyle==='long'?214:173,65,94],a.hair);
-    }
-    if(a.hairStyle==='curly')for(let i=0;i<10;i++){const angle=Math.PI+i*Math.PI/9;ellipse(c,Math.cos(angle)*57,98+Math.sin(angle)*52,18,19,a.hair);}
-    ellipse(c,-53,128,12,16,a.skin);
-    poly(girl?[-47,95,-28,75,31,74,51,99,52,139,38,161,14,171,-13,170,-39,158,-50,130]:[-47,95,-28,75,31,74,51,99,52,139,39,164,17,177,-15,173,-43,157,-50,130],a.skin,4);
-    c.save();c.globalAlpha=.13;poly([-43,126,-35,152,-12,166,20,173,-15,172,-43,156], '#76563e',0);c.restore();
-    const blink=time>0&&!attack&&!pose&&Math.floor(time*24)%109<3;
-    for(const [x,width]of (girl?[[-22,27],[26,27]]:[[-16,19],[29,23]])){
-      if(blink){line(c,[x-width/2,133,x+width/2,133],'#252824',4);continue;}
-      rounded(c,x-width/2,112,width,35,'#fff7e5',3,false);
-      rounded(c,x-5,116,13,28,'#4d514b',2,false);rounded(c,x-3,116,9,19,'#1e2527',1,false);
-      rounded(c,x-3,116,5,9,'#ffffff',0,false);rounded(c,x+3,137,3,5,'#e9f8fd',0,false);
-      line(c,[x-width/2-2,114,x-5,108,x+width/2,109,x+width/2,141],'#202521',4);
-      line(c,[x-4,145,x+7,145],'#8b7355',2);
-      if(girl){line(c,[x-width/2-2,114,x-width/2-6,109],'#292924',3);ellipse(c,x,151,10,3,'#d7998580',false);}
-    }
-    line(c,[9,145,12,146],'#ad855d',2);
-    if(attack||pose==='uppercut')rounded(c,6,155,11,8,'#9c6252',2);else line(c,[5,158,13,158],'#5d4934',3);
-    // The swept style follows the long side fringe and irregular tips of the supplied reference.
-    if(a.hairStyle!=='bald'){
-      if(a.hairStyle==='swept')poly([-64,106,-66,76,-54,52,-29,34,8,31,20,39,39,35,35,45,52,53,58,66,45,62,59,82,53,104,44,86,33,67,18,66,10,92,5,128,-9,148,-12,109,-25,86,-28,139,-41,163,-41,138,-53,148,-52,123,-64,133],a.hair);
-      else if(a.hairStyle==='short')poly([-63,107,-69,93,-62,78,-73,80,-57,62,-62,55,-39,45,-43,36,-12,39,6,28,4,39,29,39,39,51,53,50,49,63,63,76,55,80,61,103,50,120,40,87,27,101,17,79,-1,96,-10,85,-30,107,-28,91,-48,115,-46,101],a.hair);
-      else if(a.hairStyle==='curly'){for(let i=0;i<5;i++)ellipse(c,-43+i*23,84+(i%2)*9,17,19,a.hair);}
-      else if(girl&&a.hairStyle==='bob'){
-        poly([-63,122,-62,72,-51,52,-30,38,13,37,40,48,57,71,61,123,51,148,41,154,47,113,37,90,29,105,15,101,11,91,3,104,-9,102,-16,92,-24,105,-37,101,-42,90,-48,115,-44,151,-56,142],a.hair);
-        line(c,[-35,56,-37,76,-33,91],'#ad91a466',3);line(c,[-13,49,-14,70,-11,90],'#ad91a433',3);
-      }
-      else poly([-63,118,-62,64,-32,41,20,40,54,64,61,115,39,87,25,118,8,91,-5,122,-15,88,-39,137,-46,165,-51,128],a.hair);
-      if(!girl&&a.hair==='#e7dfe5'){line(c,[39,61,47,77,46,94],'#cb9cac',9);line(c,[22,49,31,62,33,80],'#e2b9c4',7);}
-      shine(girl?'#ffffff':'#fff8f5',girl?.5:.45);line(c,[-49,85,-43,62,-28,50],girl?'#ffffff':'#fff8f5',7);line(c,[-30,88,-25,65,-15,54],girl?'#ffffff':'#fff8f5',5);line(c,[29,49,39,57,44,70],girl?'#fffafa':'#fff8f5',5);c.restore();
-      if(girl){poly([-45,52,-66,40,-69,58,-48,63],'#dfc6ca',3);poly([-44,51,-32,33,-23,47,-42,62],'#eedbe0',3);ellipse(c,-45,55,7,7,'#f5e6c8');}
-    }
-    c.restore();
-    // Bent front arm holds an unmistakable writing tool across the waist.
-    c.save();c.translate(35,212);c.rotate(pose==='uppercut'?-2.45:pose==='kick'?.7:attack?-1.1+attack*2.2:0);
-    poly([0,-7,15,-4,23,12,16,23,3,23,-6,11],a.skin);
-    line(c,[13,0,17,9],'#fff1d3',4);
-    if(!pose&&!emptyHands){c.save();c.translate(-5,30);c.rotate(-Math.PI/2+.12);toolDrawing(c,weapon,0,0,weapon==='pen'?.86:.8);c.restore();}
-    ellipse(c,5,24,12,10,a.skin);line(c,[1,19,1,24],'#ab835b',2);c.restore();
-    if(seated){rounded(c,-31,243,72,24,'#eee1c3',2);line(c,[-20,251,25,251],'#9e9475',2);}
-    c.restore();this.texture.needsUpdate=true;
+  setTeacher(teacher: Teacher): void { this.teacher = teacher; this.paint(0, false, teacher.tool); }
+  setAppearance(appearance: CharacterAppearance): void { this.appearance = { ...appearance }; this.paint(0, false, 'pen'); }
+  paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose: 'uppercut' | 'kick' | 'dodge' | null = null, emptyHands = false): void {
+    paintCharacter(this.c, this.appearance, time, walking, weapon, attack, seated, pose, emptyHands, toolDrawing, this.instructor, this.clerk, this.teacher);
+    this.texture.needsUpdate = true;
   }
 }
 

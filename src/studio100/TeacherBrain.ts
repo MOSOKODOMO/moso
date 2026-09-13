@@ -5,7 +5,7 @@ export class TeacherBrain {
  private think=0;private attackWait=.8;private jumpWait=.5;private dodgeWait=0;private axis=0;
  private aggression=.5;
  constructor(private random:()=>number=Math.random){}
- reset(id:string){this.think=0;this.attackWait=.8;this.jumpWait=.5;this.dodgeWait=0;this.axis=0;this.aggression=.35+(Array.from(id).reduce((a,c)=>a+c.charCodeAt(0),0)%50)/100;}
+ reset(id:string,openingDelay=0){this.think=openingDelay;this.attackWait=.8;this.jumpWait=.5;this.dodgeWait=openingDelay;this.axis=0;this.aggression=.35+(Array.from(id).reduce((a,c)=>a+c.charCodeAt(0),0)%50)/100;}
  update(dt:number,v:View):{axis:number;jump:boolean;drop:boolean;dodge:number;pickup:boolean;move:TeacherMove|null}{
   this.think-=dt;this.attackWait-=dt;this.jumpWait-=dt;this.dodgeWait-=dt;
   const out={axis:this.axis,jump:false,drop:false,dodge:0,pickup:false,move:null as TeacherMove|null};
