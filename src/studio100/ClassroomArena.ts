@@ -43,7 +43,7 @@ export class ClassroomArena {
  }
  drop(owner:PropOwner,body:MotionBody){const p=this.held(owner);if(p){p.state='flying';p.x=body.x;p.y=body.y+1;p.vx=2;p.vy=2;p.owner=null;p.timer=0;p.bounces=0;}}
  threat(body:MotionBody,owner:PropOwner){return this.props.some(p=>p.state==='flying'&&p.owner!==owner&&p.owner!==null&&Math.abs(p.x-body.x)<6&&Math.abs(p.y-body.y-1.4)<2.5&&Math.sign(p.vx)===Math.sign(body.x-p.x));}
- update(dt:number,hero:MotionBody,boss:MotionBody,heroFacing:number,onHit:(owner:PropOwner,kind:PropKind,direction:number)=>void){
+ update(dt:number,hero:MotionBody,boss:MotionBody,heroFacing:number,onHit:(owner:PropOwner,kind:PropKind,direction:number)=>void,hands?:{hero:{x:number;y:number};boss:{x:number;y:number}}){
   if(!this.group.visible)return;this.time+=dt;
   for(const p of this.props){
    if(p.state==='spent'){p.timer-=dt;if(p.timer<=0){p.x=p.homeX;p.y=p.homeY;p.state='rest';p.owner=null;p.mesh.visible=true;}continue;}
@@ -51,7 +51,8 @@ export class ClassroomArena {
     const body=p.owner==='hero'?hero:boss,dir=p.owner==='hero'?heroFacing:Math.sign(hero.x-boss.x)||1;
     const width=p.owner==='hero'?3.2:3.45,height=p.owner==='hero'?4.05:4.35;
     // Canvas hand (91.3,121.85) on a 130x165 sprite; place each handle at those fingers.
-    const handX=body.x+dir*(91.3/130-.5)*width,handY=body.y+(1-121.85/165)*height;
+    const anchor=hands?.[p.owner!];
+    const handX=anchor?.x??body.x+dir*(91.3/130-.5)*width,handY=anchor?.y??body.y+(1-121.85/165)*height;
     const scaleX=p.kind==='cup'?-dir:dir,angle=p.kind==='cup'?0:-dir*.24;
     const gripX=p.kind==='cup'?24*1.3*1.2/160:-Math.sin(.8)*48*1.2/160;
     const gripY=p.kind==='cup'?-(8+1.3)*1.2/160:-Math.cos(.8)*48*1.2/160;

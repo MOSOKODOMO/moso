@@ -3,6 +3,7 @@ import type { Place, Weapon } from './StudioState';
 import type { Teacher } from './Teachers';
 import { defaultAppearance, type CharacterAppearance } from './CharacterAppearance';
 import { paintCharacter } from './CharacterRenderer';
+import type { CharacterMotion } from './CharacterMotion';
 import { itemGrip, paintItem } from './ItemArt';
 
 const INK = '#303430';
@@ -90,8 +91,8 @@ export class StudentSprite {
   }
   setTeacher(teacher: Teacher): void { this.teacher = teacher; this.paint(0, false, teacher.tool); }
   setAppearance(appearance: CharacterAppearance): void { this.appearance = { ...appearance }; this.paint(0, false, 'pen'); }
-  paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose: 'uppercut' | 'kick' | 'dodge' | null = null, emptyHands = false, showBackpack = !this.instructor && !this.clerk): void {
-    paintCharacter(this.c, this.appearance, time, walking, weapon, attack, seated, pose, emptyHands, toolDrawing, this.instructor, this.clerk, this.teacher, showBackpack);
+  paint(time: number, walking: boolean, weapon: Weapon, attack = 0, seated = false, pose: 'uppercut' | 'kick' | 'dodge' | null = null, emptyHands = false, showBackpack = !this.instructor && !this.clerk, motion?: CharacterMotion): void {
+    paintCharacter(this.c, this.appearance, time, walking, weapon, attack, seated, pose, emptyHands, toolDrawing, this.instructor, this.clerk, this.teacher, showBackpack, motion);
     this.texture.needsUpdate = true;
   }
 }

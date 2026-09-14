@@ -12,7 +12,14 @@ type Burst={mesh:Sprite;life:number;duration:number;grow:number;anchor?:MotionBo
 /** Bounded cosmetic effects and item-specific projectiles; player text is never involved. */
 export class EquipmentFX {
  private shots:Shot[]=[];private bursts:Burst[]=[];private textures=new Map<string,THREE.CanvasTexture>();
+ private leftBoundary=2;private rightBoundary=30;
  constructor(private scene:THREE.Scene){}
+ /** Update on room changes; the default bounds preserve the classroom arena. */
+ setWorldBounds(left:number,right:number):void {
+  if(!Number.isFinite(left)||!Number.isFinite(right)||right<=left)return;
+  if(left===this.leftBoundary&&right===this.rightBoundary)return;
+  this.clear();this.leftBoundary=left;this.rightBoundary=right;
+ }
  private texture(key:string):THREE.CanvasTexture {
   const cached=this.textures.get(key);if(cached)return cached;
   const c=document.createElement('canvas');c.width=128;c.height=128;const g=c.getContext('2d')!;
@@ -46,15 +53,15 @@ export class EquipmentFX {
   const key=weapon==='mechanicalPencil'?'lead':weapon==='stapler'?'staple':weapon==='calculator'?'keycap':weapon==='eraser'?'eraser':weapon==='cup'||weapon==='tennisRacket'?'cup':'splash';
   const size=large?1.5:key==='lead'?.85:.7,speed=key==='lead'?24:key==='eraser'?13:18;
   const tint=['eraser','cup','lead','keycap'].includes(key)?'#ffffff':ITEMS[weapon].tint;
-  const mesh=this.sprite(key,tint,Math.max(2,Math.min(30,x)),y,key==='lead'?(large?1.8:1.2):size,key==='lead'?(large?.45:.3):size);mesh.scale.x=dir;
+  const mesh=this.sprite(key,tint,Math.max(this.leftBoundary,Math.min(this.rightBoundary,x)),y,key==='lead'?(large?1.8:1.2):size,key==='lead'?(large?.45:.3):size);mesh.scale.x=dir;
   this.shots.push({
    mesh,weapon,damage,vx:dir*speed,life:0,
-   // Each permitted rebound has enough travel budget to reach the opposite classroom wall.
-   remaining:(range+28*bounces)/speed,bounces,radius:large?1.5:.7,
+   // Each permitted rebound can cross this room without changing the item's initial range.
+   remaining:(range+(this.rightBoundary-this.leftBoundary)*bounces)/speed,bounces,radius:large?1.5:.7,
    impact:impact?{...impact}:undefined,
   });
  }
- update(dt:number,hero:MotionBody,boss:MotionBody,active:boolean,onHit:(weapon:Weapon,damage:number,dir:number,impact?:ProjectileImpact)=>void):void {
+ update(dt:number,hero:MotionBody,boss:MotionBody,active:boolean,onHit:(weapon:Weapon,damage:number,dir:number,impact?:ProjectileImpact)=>void,onObjectHit?:(x1:number,x2:number,y:number,radius:number,dir:number,damage:number)=>boolean):void {
   if(!Number.isFinite(dt)||dt<=0)return;
   for(let i=this.bursts.length-1;i>=0;i--){
    const b=this.bursts[i];b.life+=dt;
@@ -70,10 +77,11 @@ export class EquipmentFX {
    let travel=Math.abs(p.vx)*step;
    p.mesh.rotation.z=p.weapon==='eraser'?p.life*10:p.weapon==='calculator'?Math.sin(p.life*15)*.3:0;
    while(travel>1e-8 && this.shots.includes(p)){
-    const oldX=p.mesh.position.x,dir=Math.sign(p.vx),wall=dir>0?30:2;
+    const oldX=p.mesh.position.x,dir=Math.sign(p.vx),wall=dir>0?this.rightBoundary:this.leftBoundary;
     const toWall=Math.max(0,(wall-oldX)*dir),distance=Math.min(travel,toWall),nextX=oldX+dir*distance;
     const left=Math.min(oldX,nextX)-p.radius,right=Math.max(oldX,nextX)+p.radius;
     p.mesh.position.x=nextX;
+    if(onObjectHit?.(oldX,nextX,p.mesh.position.y,p.radius,dir,p.damage)){this.removeShot(p);break;}
     if(active && boss.x>=left && boss.x<=right && Math.abs(boss.y+1.3-p.mesh.position.y)<p.radius+.8){
      this.removeShot(p);
      onHit(p.weapon,p.damage,dir,p.impact);

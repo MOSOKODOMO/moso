@@ -2,11 +2,14 @@ import type { CharacterAppearance } from './CharacterAppearance';
 import type { Teacher } from './Teachers';
 import type { Weapon } from './StudioState';
 import { itemGrip, paintWornGlove } from './ItemArt';
+import { characterRig, bodyPoint, type CharacterMotion, type RigLimb } from './CharacterMotion';
 
 type Pose = 'uppercut' | 'kick' | 'dodge' | null;
 type ToolPainter = (c: CanvasRenderingContext2D, kind: Weapon, x: number, y: number, scale?: number) => void;
 type Look = CharacterAppearance & { coat?: string; glasses?: string; beard?: string };
-const INK = '#352d3c';
+const INK = '#302a37';
+const lerp=(a:number,b:number,t:number)=>a+(b-a)*t;
+
 const paths = new Map<string, Path2D>();
 function shape(d: string): Path2D {
   let p = paths.get(d);
@@ -24,24 +27,25 @@ function mix(a: string, b: string, amount: number): string {
 export function paintCharacter(
   c: CanvasRenderingContext2D, appearance: CharacterAppearance,
   time: number, walking: boolean, weapon: Weapon, attack: number, seated: boolean,
-  pose: Pose, emptyHands: boolean, tool: ToolPainter, instructor = false, clerk = false, teacher?: Teacher, showBackpack = !instructor && !clerk,
+  pose: Pose, emptyHands: boolean, tool: ToolPainter, instructor = false, clerk = false, teacher?: Teacher, showBackpack = !instructor && !clerk, motion?:CharacterMotion,
 ): void {
   const a: Look = { ...appearance };
   if (instructor && teacher) Object.assign(a, {
     hairStyle: teacher.hairStyle, hair: teacher.hair, skin: teacher.skin, coat: teacher.coat,
     glasses: teacher.glasses, beard: teacher.beard, outfit: 'classic', outfitColour: teacher.coat,
-    accessory: 'none', eyeStyle: 'gentle', eyes: '#695548',
+    accessory: 'none', bottomsColour:'#4c526d',shoeColour:'#f6eee1',eyeStyle: 'gentle', eyes: '#695548',
   });
   if (clerk) Object.assign(a, { sex: 'female', hairStyle: 'bob', hair: '#484153', skin: '#eed0ad',
-    outfit: 'studio', outfitColour: '#9d87b1', accessory: 'none', eyeStyle: 'bright', eyes: '#8b69aa' });
+    outfit: 'studio', outfitColour: '#9d87b1', bottomsColour:'#4c526d',shoeColour:'#f6eee1',accessory: 'none', eyeStyle: 'bright', eyes: '#8b69aa' });
   const skin = a.skin, skinShade = mix(skin, '#9a5a55', .22), skinLight = mix(skin, '#fff3dc', .28);
   const hair = a.hair, hairShade = mix(hair, '#2b203c', .27), hairLight = mix(hair, '#fff5de', .42);
   const cloth = a.outfitColour || '#6e94c5', clothShade = mix(cloth, '#30324a', .29), clothLight = mix(cloth, '#ffffff', .32);
   const outfit = a.outfit || 'campus', style = a.hairStyle, feminine = a.sex === 'female';
-  const step = walking ? Math.sin(time * 12) : 0, bounce = walking ? -Math.abs(step) * 1.4 : Math.sin(time * 2.4) * .5;
-  const sway = walking ? Math.sin(time * 8) * 2 : Math.sin(time * 2) * .65;
-
-  const path = (d: string, fill: string | CanvasGradient, stroke = INK, width = 1.15) => {
+  const grip=itemGrip(weapon),rig=characterRig({time,walking,attack,seated,pose,motion,weaponFamily:grip.family,emptyHands});
+  const sitting=rig.state==='seated',sway=rig.hairSway;
+  const bottoms=a.bottomsColour||'#4c526d',bottomsShade=mix(bottoms,'#202839',.28),bottomsLight=mix(bottoms,'#c9d4e1',.3);
+  const shoes=a.shoeColour||'#f6eee1',shoeShade=mix(shoes,'#474553',.3),pack=a.backpackColour||'#9f8264';
+  const path = (d: string, fill: string | CanvasGradient, stroke = INK, width = 1.55) => {
     const p = shape(d); c.fillStyle = fill; c.fill(p);
     if (width) { c.strokeStyle = stroke; c.lineWidth = width; c.stroke(p); }
   };
@@ -50,7 +54,7 @@ export function paintCharacter(
     c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fillStyle = fill; c.fill();
     if (stroke) { c.strokeStyle = stroke; c.lineWidth = width; c.stroke(); }
   };
-  const box = (x: number, y: number, w: number, h: number, r: number, fill: string, stroke = INK, width = 1) => {
+  const box = (x: number, y: number, w: number, h: number, r: number, fill: string, stroke = INK, width = 1.3) => {
     c.beginPath(); c.roundRect(x, y, w, h, r); c.fillStyle = fill; c.fill();
     if (width) { c.strokeStyle = stroke; c.lineWidth = width; c.stroke(); }
   };
@@ -61,11 +65,10 @@ export function paintCharacter(
   const dress = outfit === 'pinafore';
   const longPants = outfit === 'varsity' || outfit === 'studio' || outfit === 'classic';
 
-  c.clearRect(0, 0, 130, 165); c.save(); c.translate(65, bounce); c.lineCap = 'round'; c.lineJoin = 'round';
-  if (pose === 'dodge') { c.translate(0, 38); c.scale(1.06, .76); }
-
-  // Lower the whole head assembly slightly so the neck stays short and natural.
-  c.save(); c.translate(0, 3);
+  c.clearRect(0,0,130,165);c.save();c.translate(65,0);c.lineCap='round';c.lineJoin='round';
+  const applyBody=()=>{c.translate(rig.bodyX,rig.bodyY);c.rotate(rig.lean);c.scale(.94,.8);c.translate(0,-132);};
+  const applyHead=()=>{const neck=bodyPoint(rig,0,95);c.translate(neck.x+1.5,neck.y);c.rotate(rig.headTilt);c.scale(1.08,.91);c.translate(0,-95);};
+  c.save();applyHead();
   // Back hair is behind the entire figure, so neck, shoulders and outfits read clearly.
   if (style === 'long') {
     path('M-31 51 Q-45 83-36 123 Q-28 136-18 122 L-9 70 Z', hairShade);
@@ -88,81 +91,49 @@ export function paintCharacter(
   }
 
   c.restore();
-
+  c.save();applyBody();
   const backpack = showBackpack && !instructor && !clerk;
   if (backpack) {
     // A compact pack behind the shoulder, with a gusset and zipped front pocket.
     line('M-24 102 Q-27 93-19 95 L-17 101', '#594c4b', 2.3);
-    path('M-24 99 Q-31 100-32 108 L-32 125 Q-31 132-23 132 L-12 129 L-13 104 Q-15 98-24 99Z', grad(99, 133, '#b29876', '#786455'));
-    path('M-28 103 Q-23 99-17 103 L-16 127 L-24 130 Q-29 128-29 123Z', '#a58b6d', '', 0);
-    box(-31, 116, 14, 12, 3, '#8b735d', '#5b5050', .85);
+    path('M-24 99 Q-31 100-32 108 L-32 125 Q-31 132-23 132 L-12 129 L-13 104 Q-15 98-24 99Z', grad(99, 133,mix(pack,'#eee4c3',.3),mix(pack,'#302d39',.27)));
+    path('M-28 103 Q-23 99-17 103 L-16 127 L-24 130 Q-29 128-29 123Z', pack, '', 0);
+    box(-31, 116, 14, 12, 3, mix(pack,'#463e43',.2), '#5b5050', .85);
     line('M-28 119 L-19 119', '#d4bc96', 1);
     line('M-20 119 L-20 122', '#e5c57f', 1.1);
     line('M-15 107 L-14 124', '#d0b58c', .8);
   }
 
-  // The leg and shoe shapes have ankles, rounded toes and soles instead of rectangular blocks.
-  const leg = (side: number) => {
-    c.save(); c.translate(side * 9, seated ? 126 : 128);
-    const kick = pose === 'kick' && side === 1;
-    c.rotate(kick ? -1.12 : seated ? -side * .8 : side * step * .19);
-    const lift = seated ? -2 : side * step * 2.8;
-    c.translate(0, lift);
-    path('M-6-3 L6-3 L5 22 Q2 25-4 22Z', longPants ? '#4c526d' : skin);
-    if (longPants) {
-      path('M-5-2 L-1-2 L-1 20 L-5 20Z', '#67718e', '', 0);
-      line('M-5 18 L5 18', '#313c53', 1.2);
-    } else {
-      path('M-5 7 L-2 8 L-2 21 L-5 21Z', skinShade, '', 0);
-      if (outfit !== 'street' && !dress) box(-5, 18, 10, 6, 1, '#fff9e9', '', 0);
-    }
-    const shoe = dress ? '#b68c58' : outfit === 'street' ? cloth : '#f6eee1';
-    path(`M-6 ${dress ? 13 : 21} Q0 ${dress ? 12 : 20} 6 ${dress ? 14 : 21} L7 27 Q13 28 12 31 Q7 33-7 32 Q-9 29-6 ${dress ? 13 : 21}Z`, shoe);
-    path('M-8 29 Q1 31 12 29 L12 32 L-7 33Z', dress ? '#6f5860' : '#c4bcc4', '', 0);
-    line('M-4 25 L3 25 M-4 27 L4 27', dress ? '#efdfb6' : '#9a9ba9', .8);
-    c.restore();
+  c.restore();
+  const strokeLimb=(p:RigLimb,width:number,fill:string)=>{const draw=()=>{c.beginPath();c.moveTo(p.start.x,p.start.y);c.lineTo(p.joint.x,p.joint.y);c.lineTo(p.end.x,p.end.y);};draw();c.strokeStyle=INK;c.lineWidth=width+2.5;c.stroke();draw();c.strokeStyle=fill;c.lineWidth=width;c.stroke();};
+  const leg=(p:RigLimb,front:boolean)=>{
+    strokeLimb(p,longPants?8:6.5,longPants?(front?bottoms:bottomsShade):(front?skin:skinShade));
+    if(longPants){line('M'+(p.joint.x-1)+' '+(p.joint.y-1)+' L'+(p.end.x-1)+' '+(p.end.y-2),front?bottomsLight:bottoms,1.6);}
+    c.save();c.translate(p.end.x,p.end.y);c.rotate(p.angle);
+    if(!longPants&&outfit!=='street')box(-4.5,-5,9,7,1,'#f8f0df','',0);
+    path('M-6-2 Q-2-5 3-3 L6 0 Q13 1 13 5 L12 8 L-7 8 Q-9 4-6-2Z',front?shoes:shoeShade,INK,1.45);
+    path('M-7 5 Q2 7 12 4 L12 8 L-7 8Z',shoeShade,'',0);line('M-2 0 L4 0 M-1 2 L5 2',mix(shoes,'#3d3a4b',.48),.9);line('M-6 7 L11 7',mix(shoes,'#fff8de',.4),1);c.restore();
   };
-  leg(-1); leg(1);
-
+  leg(rig.backLeg,false);leg(rig.frontLeg,true);
+  const heldItem=!emptyHands&&!clerk&&!sitting,wearsGloves=heldItem&&grip.family==='punch';
+  const arm=(front:boolean)=>{
+    const p=front?rig.frontArm:rig.backArm,longSleeve=['varsity','classic','street'].includes(outfit),sleeve=outfit==='campus'?'#fff9e9':outfit==='varsity'?'#eee4cf':outfit==='studio'||dress?'#f7ead6':cloth;
+    strokeLimb(p,7.3,longSleeve?sleeve:(front?skin:skinShade));
+    if(!longSleeve){const sx=lerp(p.start.x,p.joint.x,.72),sy=lerp(p.start.y,p.joint.y,.72);c.beginPath();c.moveTo(p.start.x,p.start.y);c.lineTo(sx,sy);c.strokeStyle=INK;c.lineWidth=11;c.stroke();c.strokeStyle=sleeve;c.lineWidth=8.5;c.stroke();}
+    if(longSleeve){const dx=p.end.x-p.joint.x,dy=p.end.y-p.joint.y,d=Math.hypot(dx,dy)||1;line('M'+(p.end.x-dy/d*3)+' '+(p.end.y+dx/d*3)+' L'+(p.end.x+dy/d*3)+' '+(p.end.y-dx/d*3),clothLight,2.4);}
+    if(front&&heldItem&&!wearsGloves){c.save();c.translate(p.end.x,p.end.y);const aim=grip.angle+(grip.attackAngle-grip.angle)*rig.strike-(['swing','bash'].includes(grip.family)?rig.anticipation*.5:0)+(rig.state==='uppercut'?-.4:0);c.rotate(aim);if(grip.flip)c.scale(-1,1);tool(c,weapon,-grip.x*grip.scale,-grip.y*grip.scale,grip.scale);c.restore();}
+    if(front&&clerk){c.save();c.translate(p.end.x+2,p.end.y-1);c.rotate(-.16);box(-5,-6,13,18,1.5,'#e7d5b2');line('M-2-1 L5-1 M-2 2 L4 2','#9c866d',1);c.restore();}
+    oval(p.end.x,p.end.y,5.5,5.2,front?skin:skinShade,INK,1.4);oval(p.end.x-1.5,p.end.y-2,2,1.3,skinLight);line('M'+(p.end.x-2)+' '+p.end.y+' L'+(p.end.x-2)+' '+(p.end.y+2),skinShade,.85);
+    if(wearsGloves)paintWornGlove(c,p.end.x,p.end.y-1,front);
+  };
+  arm(false);c.save();applyBody();
   // Hips and hem are drawn before the torso and the moving front hand.
   if (!dress) {
-    path('M-16 121 L16 121 L17 135 L3 137 L0 129 L-3 137 L-17 135Z', longPants ? '#4c526d' : outfit === 'street' ? '#535c68' : '#5d83b8');
-    line('M-14 132 L-5 133 M5 133 L14 132', '#a6bcce', 1.2);
-    line('M0 126 L0 131', '#344455', .9);
+    path('M-16 121 L16 121 L17 135 L3 137 L0 129 L-3 137 L-17 135Z', bottoms);
+    line('M-14 132 L-5 133 M5 133 L14 132', bottomsLight, 1.2);
+    line('M0 126 L0 131', bottomsShade, .9);
   }
 
-  const heldItem = !emptyHands && !clerk && !seated, grip = itemGrip(weapon);
-  const wearsGloves = heldItem && grip.family === 'punch';
-  const arm = (front: boolean) => {
-    const poke = front && (grip.family === 'thrust' || wearsGloves) && attack && !pose && heldItem ? Math.sin(attack * Math.PI) : 0;
-    const angle = front ? pose === 'uppercut' ? -2.35 : pose === 'kick' ? .6 : poke ? -.14 - poke * .35 : attack ? -1.05 + attack * 2.1 : -.14 : .17 + step * .13;
-    c.save(); c.translate(front ? 17 + poke * 2 : -18, 106 - poke); c.rotate(angle);
-    const sleeve = outfit === 'varsity' || outfit === 'classic' || outfit === 'street';
-    path(front ? 'M-2-6 Q7-7 9 0 L13 12 Q13 18 6 18 Q2 18 1 12 L-5 3Z' : 'M-3-6 Q-9-5-10 3 L-12 14 Q-10 20-4 17 L3 2Z', sleeve ? outfit === 'varsity' ? '#fbefdc' : cloth : skin);
-    if (!sleeve) path(front ? 'M7 0 Q12 8 11 14 L8 14 Q8 7 5 3Z' : 'M-9 1 L-10 12 L-7 12 L-6 1Z', skinShade, '', 0);
-    if (sleeve) { line(front ? 'M3 11 L11 10' : 'M-11 11 L-5 12', outfit === 'varsity' ? cloth : clothLight, 2); }
-    if (front) {
-      if (heldItem && !wearsGloves) {
-        c.save(); c.translate(7, 17);
-        // Artwork is anchored to an actual handle, not its centre. The fingers cover the grip.
-        const swing = attack ? Math.sin(attack * Math.PI) : 0;
-        const aim = grip.angle + (grip.attackAngle - grip.angle) * swing
-          + (pose === 'uppercut' ? -.35 : pose === 'kick' ? .15 : 0);
-        c.rotate(aim - angle); if (grip.flip) c.scale(-1, 1);
-        tool(c, weapon, -grip.x * grip.scale, -grip.y * grip.scale, grip.scale);
-        c.restore();
-      }
-      if (clerk) { c.save(); c.translate(9, 13); c.rotate(-.2); box(-5, -4, 13, 18, 1.5, '#e7d5b2'); line('M-2 1 L5 1 M-2 4 L4 4', '#9c866d', .8); c.restore(); }
-      oval(7, 17, 5.4, 5.3, skin, INK, 1.1); line('M4 16 L4 18', skinShade, .8);
-      oval(5.4, 14.5, 1.9, 1.1, skinLight);
-      if (wearsGloves) paintWornGlove(c, 7, 16, true);
-    } else {
-      oval(-8, 16, 5, 5.3, skin, INK, 1.1); oval(-9, 14, 1.6, 1, skinLight);
-      if (wearsGloves) paintWornGlove(c, -8, 15, false);
-    }
-    c.restore();
-  };
-  arm(false);
   // A short tapered neck blends into the collar; the head covers its upper edge.
   path('M-4 91 L4 91 L4.8 100 Q0 102-4.8 100Z', skin, skinShade, .65);
   path('M-4 94 L4 94 L4 100 Q0 101-4 100Z', grad(94, 101, skinShade, skin), '', 0);
@@ -223,45 +194,46 @@ export function paintCharacter(
   }
 
   if (backpack) {
-    line('M-13 101 Q-11 110-13 125 M13 102 Q15 111 13 124', '#6d6156', 3.1);
-    line('M-13 102 Q-12 110-13 123 M13 103 Q14 111 13 122', '#c4ad88', 1.25);
+    line('M-13 101 Q-11 110-13 125 M13 102 Q15 111 13 124', mix(pack,'#2b2833',.38), 3.1);
+    line('M-13 102 Q-12 110-13 123 M13 103 Q14 111 13 122', mix(pack,'#fff1c9',.33), 1.25);
     box(-14.5, 118, 3, 4, .8, '#dfc791', '', 0);
     box(11.5, 118, 3, 4, .8, '#dfc791', '', 0);
   }
 
-  c.save(); c.translate(0, 3);
+  c.restore();
+  c.save();applyHead();
   // Face: soft cheek curve, warm edge shading, small chin and expressive oval irises.
-  const head = 'M-28 48 Q-29 34 0 33 Q30 35 29 52 L28 72 Q26 84 13 90 Q0 97-14 90 Q-27 85-29 72Z';
+  const head = 'M-29 48 Q-28 34 1 33 Q31 36 30 53 L30 73 Q28 86 16 91 Q3 97-12 92 Q-27 88-30 74Z';
   if (style !== 'bald') path('M-32 66 Q-40 35-20 21 Q-3 11 17 21 Q39 29 35 63 L28 76 L-29 77Z', hairShade);
-  oval(-28, 71, 5.2, 7.2, skin, INK, 1); oval(28, 71, 5.2, 7.2, skin, INK, 1);
+  oval(-29,71,5.8,7.2,skin,INK,1.35); oval(29,71,3.8,6.1,skin,INK,1.1);
   line('M-30 69 Q-26 67-26 73 M30 69 Q26 67 26 73', skinShade, 1);
   path(head, grad(45, 95, skinLight, skin));
   path('M-28 61 Q-27 81-15 87 Q0 95 16 88 Q1 99-16 91 Q-29 84-29 72Z', skinShade, '', 0);
   oval(-19, 81.5, 5.7, 2.6, mix(skin, '#e08088', .34)); oval(21, 81.5, 5.7, 2.6, mix(skin, '#e08088', .34));
-  const blink = time > 0 && !attack && !pose && Math.floor(time * 24) % 113 < 3;
+  const blink = rig.blink;
   const eyeStyle = a.eyeStyle || 'bright', iris = a.eyes || '#6681a3';
   for (const side of [-1, 1]) {
-    c.save(); c.translate(side * 12.5, 68.3);
+    c.save(); c.translate(side<0?-9.5:17,68.2);c.scale(side<0?.88:1,1);
     const fierce = eyeStyle === 'fierce', sleepy = eyeStyle === 'sleepy', gentle = eyeStyle === 'gentle';
     if (blink) line('M-5 2 Q0 4 5 2', '#49323d', 1.5);
     else {
       const eye = fierce ? 'M-5-4 Q0-4 6-7 L6 5 Q0 10-5 5Z' : sleepy ? 'M-6-2 L6-2 L5 6 Q0 10-5 6Z' : gentle ? 'M-6-4 Q0-9 6-3 L5 6 Q0 11-5 6Z' : 'M-6-5 Q0-10 6-5 L6 5 Q0 11-5 6Z';
-      path(eye, '#fff9ef', '#7c5b62', .6);
+      path(eye, '#fff9ef', '#5f4650', .9);
       c.save(); c.clip(shape(eye));
       oval(1, 1.7, gentle ? 3.8 : 4.5, sleepy ? 7 : 8.2, iris);
       oval(1, -.4, 3.2, 5.8, '#303044');
       path('M-2 5 Q1 9 4 5 Q4 9 1 9 Q-2 9-2 5Z', mix(iris, '#ffefb7', .52), '', 0);
       oval(-.2, -3, 1.85, 2.1, '#fffdf6'); oval(3, 3.9, .85, 1.05, '#ffffff'); c.restore();
-      line(fierce ? 'M-6-5 L6-7' : sleepy ? 'M-6-2 L6-2' : gentle ? 'M-6-4 Q0-9 6-3' : 'M-6-5 Q0-10 6-5', '#372c3e', feminine ? 1.55 : 1.3);
+      line(fierce ? 'M-6-5 L6-7' : sleepy ? 'M-6-2 L6-2' : gentle ? 'M-6-4 Q0-9 6-3' : 'M-6-5 Q0-10 6-5', '#372c3e', feminine ? 1.9 : 1.65);
       if (feminine) line(side === -1 ? 'M-6-4 L-8-6' : 'M6-4 L8-6', '#372c3e', 1.1);
       line('M-3 8 Q0 9 3 8', '#956c6b', .55);
     }
     line(fierce ? 'M-5-12 L4-10' : gentle ? 'M-5-11 Q0-14 5-11' : 'M-5-12 Q0-14 4-12', hairShade, 1.15);
     c.restore();
   }
-  line('M1 79 Q3 80 4 79', skinShade, .8);
-  if (attack || pose === 'uppercut') path('M-2 84 Q3 82 7 84 Q6 91 2 90 Q-1 89-2 84Z', '#835061', INK, .8);
-  else line('M-2 85 Q2 88 6 85', '#89575b', 1);
+  line('M8 79 Q11 81 12 79', skinShade, .8);
+  if (rig.strike>.3 || rig.state==='uppercut') path('M2 84 Q7 82 11 84 Q10 91 6 90 Q3 89 2 84Z', '#835061', INK, .8);
+  else line('M2 85 Q6 88 10 85', '#89575b', 1);
 
   // Hair is painted as large flowing locks with thin internal shadows and ribbon-shaped highlights.
   if (style !== 'bald') {
@@ -306,9 +278,9 @@ export function paintCharacter(
 
   if (a.accessory === 'round-glasses' || (a.glasses && a.glasses !== 'none')) {
     const glasses = a.glasses || 'round', colour = glasses === 'red' ? '#aa5364' : '#403b50';
-    if (glasses === 'round') { oval(-12.5, 69.5, 10, 10, '#ffffff08', colour, 1.25); oval(12.5, 69.5, 10, 10, '#ffffff08', colour, 1.25); }
-    else { box(-23, 61, 21, 17, 3.5, '#ffffff08', colour, 1.25); box(3, 61, 21, 17, 3.5, '#ffffff08', colour, 1.25); }
-    line('M-3 68 Q0 66 3 68 M-23 65 L-28 63 M24 65 L29 63', colour, 1.2);
+    if (glasses === 'round') { oval(-9.5,69.5,9,10,'#ffffff08',colour,1.35);oval(17,69.5,10,10,'#ffffff08',colour,1.35); }
+    else { box(-20,61,20,17,3.5,'#ffffff08',colour,1.35);box(6,61,22,17,3.5,'#ffffff08',colour,1.35); }
+    line('M0 68 Q3 66 7 68 M-19 65 L-29 63 M28 65 L31 64', colour, 1.2);
     line('M-19 63 L-15 61 M7 63 L11 61', '#fff7e8aa', 1.2);
   }
   if (a.accessory === 'bow') {
@@ -326,11 +298,16 @@ export function paintCharacter(
     box(-31, 31, 62, 8, 3, '#baa5cc'); line('M-19 25 Q-3 21 16 25', '#cfbcdc', 1.5);
     box(8, 32.5, 11, 4, 1, '#f1dfbc', '', 0);
   }
-  c.restore();
-  arm(true);
-  if (seated) {
-    path('M-15 127 L0 126 L15 127 L16 136 L1 135 L-16 136Z', '#f4e4c7');
-    line('M0 128 L1 134 M-12 130 L-3 129 M4 129 L12 130', '#c2ad91', .8);
+  if(a.accessory==='cap'){
+    path('M-34 42 Q-37 23-19 18 Q-2 12 18 20 Q32 26 31 43Z',grad(17,44,clothLight,cloth));
+    path('M-31 41 Q-2 36 28 42 Q42 43 45 49 Q35 54 22 48 L-31 47Z',clothShade);
+    line('M-8 18 Q-3 28-3 39',clothShade,1.5);oval(-7,17,2.4,1.7,clothLight);line('M27 46 Q35 46 40 49',clothLight,1.2);
+  }else if(a.accessory==='beanie'){
+    path('M-35 47 L-36 33 Q-35 10-9 9 Q19 6 31 26 L34 47Z',grad(10,49,clothLight,cloth));
+    box(-35,39,69,13,5,clothShade);for(let x=-28;x<29;x+=7)line('M'+x+' 42 L'+(x-1)+' 49',clothLight,1.4);
+    line('M-20 17 Q-26 25-25 36 M-5 13 Q-9 25-8 35 M11 16 Q15 26 17 36',clothShade,1.15);box(17,42,10,6,1.4,'#e6cea2');
   }
+  c.restore();arm(true);
+  if(sitting){c.save();applyBody();path('M-15 127 L0 126 L15 127 L16 136 L1 135 L-16 136Z','#f4e4c7');line('M0 128 L1 134 M-12 130 L-3 129 M4 129 L12 130','#b29b82',1);c.restore();}
   c.restore();
 }

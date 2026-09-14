@@ -1,6 +1,6 @@
 # Shop and upgrade direction
 
-Shop and upgrade notes for Fight Your Way to Architecture. The drawing board, scale ruler and mechanical pencil below remain planned.
+Shop and upgrade notes for Fight Your Way — Architecture Journey. The drawing board, scale ruler and mechanical pencil below remain planned.
 
 Implemented: Mika offers Invent with words in the mysterious shop. B2 selects a weapon, levels it up (+4 attack power per level), enhances it (up to 15% shorter attack cooldown), or embeds one relic. Ink gives +3 weapon damage, Prism gives +15% reach, and Gale gives 10% shorter attack cooldown. Embedding costs 80 coins including the relic; replacing it costs 80 coins. B1 training costs 40–80 stamina per rank: endurance grants +20 maximum stamina and +4% movement speed; strength grants +3 damage to all attacks.
 

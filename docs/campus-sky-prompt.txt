@@ -1,0 +1,31 @@
+Built-in imagegen tool; generated 2026-09-14. No API/CLI fallback used.
+
+UPPER SKY
+Use case: stylized-concept.
+Asset: production background art for a warm painterly side-scrolling architecture-student game.
+Input image 1 is a STYLE AND ALIGNMENT REFERENCE: the existing lower campus panorama. Generate ONLY THE NEW UPPER EXTENSION, not the same street scene.
+Landscape panoramic output, approximately 8:3 aspect ratio. This new rectangle will be placed directly above the reference so the camera can climb into the sky. No game HUD, no text, no characters.
+COMPOSITION: the lower edge of the new rectangle is the top of the reference. Continue the existing modern glass Building 100 at the SAME horizontal position: its facade occupies x29% to49% of the full width. Its repeating huge circular ivory sunshades, bronze window mullions, warm lit studios and concrete side walls must match the reference. Add four upper storeys and a clean flat roof. The building rises from the lower edge to about 54% down from the top; its highest roof is near y54% of this new image. Broad visible horizontal metal/concrete window ledges on every storey, spanning the tower width, suitable for a small game character to climb. Do not restart a new building at another position. Other reference buildings end near the bottom edge and leave open sky; no street, ground, storefronts, restaurant or apartment interior.
+BACKGROUND: a beautiful continuous Melbourne sunset sky above the city, warm soft peach and dusty rose low down fading into lavender and pale blue high above, delicate distant Melbourne towers and a tiny recognizable spire in the haze along the bottom, gently illuminated cream and lavender clouds. Sparse small distant hot-air balloons with muted ochre, dusty red and sage fabric around the far left and far right upper sky. Most central sky remains open for separately rendered jumpable clouds and balloons.
+STYLE: match image 1's finely painted architectural illustration, tactile soft brush grain, rich dusk lighting, hand-illustrated detail, restrained colors; same camera straight-on elevation with mild depth, no fisheye. Smooth continuous cloud sky at all four edges. No large foreground clouds or large foreground balloons yet.
+LOWER-EDGE ALIGNMENT: the lower 8% of this new upper rectangle should smoothly continue the reference's top-of-frame lavender-peach sky and cut-off Building100 facade. Preserve the tower footprint left29%,right49%. This is the upper slice of one continuous scene, not a collage or framed image.
+
+CLOUD PLATFORM
+Use case: stylized-concept. Asset: one isolated jumpable cloud sprite for a finely painted side-scrolling game. Actual transparent PNG background, no checkerboard, no sky, no ground, no text.
+A single broad, substantial soft ivory cloud, flattened gently across the crown so a small character can stand on it. Silhouette wide horizontal 3:1, fluffy scalloped ends, a nearly level long top surface with just a few shallow humps. Warm peach-gold sunset rim light on the upper edge, muted lavender-grey shading below, tactile painterly wisps along the base. Refined hand-painted architectural-game style, restrained cream and lavender palette, softly textured but opaque enough to read as a platform. Viewed straight-on from the side. Cloud fills 90% of image width with a small clear transparent margin. No extra clouds, props or characters.
+
+BALLOON PLATFORM
+Use case: stylized-concept. Asset: isolated hot-air balloon platform sprite for a warm finely painted side-scrolling student adventure. Actual transparent PNG background, no checkerboard, no sky or ground.
+A single charming traditional hot-air balloon, straight-on side view, entire silhouette clearly visible. Rounded pear-shaped cloth envelope in alternating muted sage green, warm ochre and faded terracotta panels, fine stitched seams and subtle fabric texture. Ropes descend to a WIDE shallow rectangular wicker gondola with a sturdy broad FLAT wooden top railing that a small game character can jump onto; basket width roughly half the envelope width. Basket has simple woven texture and small bronze corner fixtures. No person inside. No text, numbers, branding, flames or dangling objects. Warm peach sunset highlights on the left, lavender shadows on the right, soft hand-painted storybook architectural-game art, clean readable silhouette without a heavy cartoon outline. Full balloon fills85% of image height, centered, clear transparent margins. Envelope-to-basket proportions compact enough that the entire balloon reads clearly as a platform in a side-scrolling game.
+
+IMPLEMENTATION COORDINATES
+The generated upper panorama is 2048 x 768, mapped to 96 x 36 world units, bottom y24 and top y60.
+The original 2172 x 724 campus stays 96 x 32, centered at (48,13.15), unchanged on disk.
+A 5.15-unit vertex-alpha blend joins the sky layers from y24 to29.15; the tower has a short half-unit blend underneath its new join ledge, avoiding doubled windows.
+An 8-unit cloud-only texture reflection covers camera headroom from y60 to68.
+The two original terraces broaden to x27.75..46.75 at y17.305 and y21.415; a third join ledge is y25.05.
+New facade ledges: y28.65,32.6,36.55,40.6,44.7; roof y49.0.
+Two routes continue through clouds y52.8, balloon basket rails y56.5, clouds y60.2 and balloon crowns y63.15.
+Right route centers:49.6,56,62,56. Left route centers:21.8,16.1,10,16.1.
+Platform silhouettes stay static; only cloud opacity varies slightly, keeping landing geometry aligned.
+Cloud and balloon PNGs preserve their generated alpha channels.

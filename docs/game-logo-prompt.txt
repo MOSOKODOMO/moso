@@ -1,0 +1,10 @@
+Generated with the built-in image-generation tool.
+
+Use case: logo-brand.
+Asset type: production video-game title logo PNG for a fantasy student fighting game HUD and character creation screen.
+Create a polished original arcade fighting game wordmark inspired by the energetic 1990s hand-drawn fighting-game logos shown in the user's reference: hard forward-slanted brush lettering, sharp sweeping terminals, interlocking dynamic letterforms, brilliant warm yellow highlights graduating into orange and scarlet red, thick near-black/dark burgundy contour, thin warm cream outer keyline, dramatic but clean offset shadow. It should feel like an exciting playable action game, not a presentation title.
+Exact main title: "FIGHT YOUR WAY". Use two compact angled lines: "FIGHT" across the upper line and "YOUR WAY" across the lower line, both very legible, FIGHT slightly larger. All three words must be readable and spelled exactly. Main title dominates.
+Exact subtitle: "ARCHITECTURE JOURNEY". This sits centered directly beneath the main wordmark in smaller, sturdy, widely spaced warm ivory uppercase letters on a slim dark burgundy ribbon. Spell ARCHITECTURE correctly: A R C H I T E C T U R E. A tiny subtle architectural drafting-line accent can be integrated into the underline but do not add buildings or characters.
+Composition: one single centered standalone logo lockup, wide 2:1 composition with close but adequate clear margin. Keep the complete silhouette and all letters inside the image.
+Background: genuinely transparent alpha outside the logo. No white rectangle, no solid background, no checkerboard artwork. Crisp finished graphic edges, rich flat gradients inside letters, print-quality emblem with no mockup or environmental scene.
+Do not include any 'Street Fighter' wording, existing emblems, trademark symbols, watermarks, extra slogans, or any other text. Make the silhouette and lettering original while capturing the reference's fiery arcade energy.

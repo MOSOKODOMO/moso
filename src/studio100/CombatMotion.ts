@@ -15,7 +15,7 @@ export function hitImpulse(body: MotionBody, direction: number, strength: number
   body.vx *= .15; body.vy = Math.max(body.vy, lift); body.stun = Math.max(body.stun, stun);
 }
 /** Exact exponential displacement keeps drag consistent at different frame rates. */
-export function stepMotion(body: MotionBody, axis: number, speed: number, dt: number, rightBoundary = 30, platforms:readonly ArenaPlatform[]=[], dropThrough=false): boolean {
+export function stepMotion(body: MotionBody, axis: number, speed: number, dt: number, rightBoundary = 30, platforms:readonly ArenaPlatform[]=[], dropThrough=false, ceiling=13.7): boolean {
   const previousY=body.y;
   const wasAirborne = body.y > STUDIO_GROUND + .001 || body.vy > 0;
   const target = body.stun > 0 ? 0 : axis * speed;
@@ -32,7 +32,7 @@ export function stepMotion(body: MotionBody, axis: number, speed: number, dt: nu
     if(landing){body.y=landing.y;body.vy=0;return previousY>landing.y+.03;}
   }
   if (body.y <= STUDIO_GROUND) { body.y = STUDIO_GROUND; body.vy = 0; return wasAirborne; }
-  if(platforms.length && body.y>13.7){body.y=13.7;body.vy=Math.min(0,body.vy);}
+  if(platforms.length && body.y>ceiling){body.y=ceiling;body.vy=Math.min(0,body.vy);}
   return false;
 }
 /** Bodies share the floor, but a jumping student can pass over an instructor. */
