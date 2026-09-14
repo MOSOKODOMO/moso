@@ -175,12 +175,6 @@
 .studio-interaction { flex:1; padding:0; }
 .studio-controls { display:inline-block; padding:5px 9px; border-radius:5px; background:#27392e66; }
 .context-hint,.crafting-label { font-size:10px; padding:5px 9px; color:#fff5d8; background:#354b3d73; border-color:#c9c4a080; text-shadow:0 1px 3px #17251d; }
-.invention-panel { margin-top:24px; padding-top:22px; border-top:1px solid #adb49b; }
-.invention-panel label,.invention-panel input { display:block; }
-.invention-panel input { box-sizing:border-box; width:100%; padding:13px; margin:8px 0 12px; border:1px solid #879879; border-radius:8px; font:inherit; background:#fffdf4; color:#293c30; }
-.invention-preview img { width:64px; float:right; }
-.invention-owned { padding:12px 0; }
-.invention-owned small { display:block; }
 .menu-actions { display:flex;flex-wrap:wrap;gap:10px; }
 .studio-modal details { border-top:1px solid #b8baa6;padding:17px 0; }
 .studio-modal summary { cursor:pointer;font-weight:bold; }

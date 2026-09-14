@@ -1,6 +1,7 @@
 import type { CharacterAppearance } from './CharacterAppearance';
 import type { Teacher } from './Teachers';
 import type { Weapon } from './StudioState';
+import { itemGrip, paintWornGlove } from './ItemArt';
 
 type Pose = 'uppercut' | 'kick' | 'dodge' | null;
 type ToolPainter = (c: CanvasRenderingContext2D, kind: Weapon, x: number, y: number, scale?: number) => void;
@@ -130,8 +131,10 @@ export function paintCharacter(
     line('M0 126 L0 131', '#344455', .9);
   }
 
+  const heldItem = !emptyHands && !clerk && !seated, grip = itemGrip(weapon);
+  const wearsGloves = heldItem && grip.family === 'punch';
   const arm = (front: boolean) => {
-    const poke = front && weapon === 'pen' && attack && !pose && !emptyHands ? Math.sin(attack * Math.PI) : 0;
+    const poke = front && (grip.family === 'thrust' || wearsGloves) && attack && !pose && heldItem ? Math.sin(attack * Math.PI) : 0;
     const angle = front ? pose === 'uppercut' ? -2.35 : pose === 'kick' ? .6 : poke ? -.14 - poke * .35 : attack ? -1.05 + attack * 2.1 : -.14 : .17 + step * .13;
     c.save(); c.translate(front ? 17 + poke * 2 : -18, 106 - poke); c.rotate(angle);
     const sleeve = outfit === 'varsity' || outfit === 'classic' || outfit === 'street';
@@ -139,25 +142,24 @@ export function paintCharacter(
     if (!sleeve) path(front ? 'M7 0 Q12 8 11 14 L8 14 Q8 7 5 3Z' : 'M-9 1 L-10 12 L-7 12 L-6 1Z', skinShade, '', 0);
     if (sleeve) { line(front ? 'M3 11 L11 10' : 'M-11 11 L-5 12', outfit === 'varsity' ? cloth : clothLight, 2); }
     if (front) {
-      if (!pose && !emptyHands && !clerk) {
+      if (heldItem && !wearsGloves) {
         c.save(); c.translate(7, 17);
-        // Each native grip point sits under the fingers. Pointed tools face outwards.
-        if (weapon === 'cup') {
-          c.rotate(-angle - .06); c.scale(-1, 1);
-          tool(c, weapon, -24 * .29, -.29, .29);
-        } else if (weapon === 'ruler') {
-          c.rotate((attack ? .55 + attack : .88) - angle);
-          tool(c, weapon, 0, -48 * .32, .32);
-        } else {
-          c.rotate((attack ? -Math.PI / 2 + .12 : -1.12) - angle);
-          tool(c, weapon, 0, 43 * .32, .32);
-        }
+        // Artwork is anchored to an actual handle, not its centre. The fingers cover the grip.
+        const swing = attack ? Math.sin(attack * Math.PI) : 0;
+        const aim = grip.angle + (grip.attackAngle - grip.angle) * swing
+          + (pose === 'uppercut' ? -.35 : pose === 'kick' ? .15 : 0);
+        c.rotate(aim - angle); if (grip.flip) c.scale(-1, 1);
+        tool(c, weapon, -grip.x * grip.scale, -grip.y * grip.scale, grip.scale);
         c.restore();
       }
       if (clerk) { c.save(); c.translate(9, 13); c.rotate(-.2); box(-5, -4, 13, 18, 1.5, '#e7d5b2'); line('M-2 1 L5 1 M-2 4 L4 4', '#9c866d', .8); c.restore(); }
       oval(7, 17, 5.4, 5.3, skin, INK, 1.1); line('M4 16 L4 18', skinShade, .8);
       oval(5.4, 14.5, 1.9, 1.1, skinLight);
-    } else { oval(-8, 16, 5, 5.3, skin, INK, 1.1); oval(-9, 14, 1.6, 1, skinLight); }
+      if (wearsGloves) paintWornGlove(c, 7, 16, true);
+    } else {
+      oval(-8, 16, 5, 5.3, skin, INK, 1.1); oval(-9, 14, 1.6, 1, skinLight);
+      if (wearsGloves) paintWornGlove(c, -8, 15, false);
+    }
     c.restore();
   };
   arm(false);

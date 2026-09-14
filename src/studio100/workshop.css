@@ -11,3 +11,14 @@
 .studio-app .studio-modal .workshop-relic button { margin:0; padding:9px 5px; font-size:10px; }
 .workshop-relic.selected { border-color:#9dd8bc; background:#3a737040; }
 @media(max-width:600px) { .workshop-relics { grid-template-columns:1fr; }.studio-app .studio-modal .workshop-tool { grid-template-columns:1fr; text-align:center; gap:3px; padding:7px 3px; }.workshop-tool img { margin:auto; grid-row:auto; }.workshop-summary { gap:7px; }.workshop-summary strong { font-size:14px; } }
+.workshop-inventory-caption { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 2px 9px; color:#eedbad; font-size:12px; }
+.workshop-inventory-caption span { color:#b8cdc2; font-size:10px; }
+.workshop-loadout { grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); max-height:220px; overflow:auto; overscroll-behavior:contain; padding:3px; scrollbar-width:thin; scrollbar-color:#9cb7aa #17313c; }
+.workshop-tool span { overflow-wrap:anywhere; }
+.workshop-empty { display:grid; justify-items:center; gap:12px; padding:25px 12px; text-align:center; }
+.workshop-empty h3,.workshop-empty p { margin:0; }
+@media(max-width:600px) { .workshop-loadout { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:226px; }.studio-app .studio-modal .workshop-tool { min-height:91px; }.workshop-tool span { font-size:10px;line-height:1.3; } }
+
+.studio-app .studio-modal:has(.workshop-panel) { box-sizing:border-box; }
+
+@media(max-height:500px) { .workshop-loadout { max-height:35dvh; } }

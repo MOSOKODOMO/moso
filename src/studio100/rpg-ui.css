@@ -53,7 +53,7 @@
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) h3 { color:#f8e8bf; font-size:15px; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) p { color:#d4e0d6; font-size:12px; line-height:1.55; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) :is(.detail,small,footer,.faculty-note,.mystery-note) { color:#bdccc5; }
-.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) :is(.choice,.teacher-intro,.faculty-card,.invention-panel) { border-color:#a3b7ad66; border-radius:6px; background:transparent; box-shadow:inset 0 1px #d7e1c717; }
+.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) :is(.choice,.teacher-intro,.faculty-card) { border-color:#a3b7ad66; border-radius:6px; background:transparent; box-shadow:inset 0 1px #d7e1c717; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .choice { padding:15px; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button { color:#f7ebc7; background:linear-gradient(180deg,#718d8c66,#2b4b5a66); border:1px solid #b7c7b799; border-radius:5px; box-shadow:inset 0 1px #edffdd44,0 2px #10283799; padding:9px 13px; font-size:12px; font-weight:bold; text-shadow:0 1px #163442; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) button:hover:not(:disabled) { border-color:#f0d598; background:linear-gradient(180deg,#89a09e80,#46716f80); }
@@ -69,8 +69,6 @@
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .archive-link { margin-bottom:12px; color:#f5db9e; border-color:#ccb78399; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .faculty-card { padding:11px; }
 .studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .faculty-card .eyebrow { color:#bcdacc; }
-.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .invention-panel input { color:#f5edcf; background:#17334166; border-color:#9fc5b7; }
-.studio-app .studio-modal:not(.dressing-room):not(.settings-modal) .invention-panel input::placeholder { color:#b7c9c1; }
 
 @media(max-width:1000px) {
  .student-stats { padding:8px 9px; }
@@ -110,5 +108,4 @@
 @media(prefers-reduced-motion:reduce) {
  .studio-app :is(.weapon-button,.move-dock button,.studio-meta button) { transition:none; }
 }
-.shop-invention-panel { margin-top:0; padding-top:0; border-top:0; }
 .clerk-services { display:flex; flex-wrap:wrap; gap:9px; margin-top:12px; }

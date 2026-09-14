@@ -1,4 +1,4 @@
-import type { Weapon } from './StudioState';
+import { WEAPON_IDS, isWeapon, type Weapon } from './ItemCatalog';
 
 export const MAX_ENHANCEMENT = 3;
 export const EMBED_COST = 80;
@@ -10,9 +10,8 @@ export const RELICS = {
 export type RelicId = keyof typeof RELICS;
 export interface WeaponMod { enhancement: number; relic: RelicId | null }
 export type WeaponMods = Record<Weapon, WeaponMod>;
-export interface WeaponModState { coins: number; weapon: Weapon; weaponMods: WeaponMods }
+export interface WeaponModState { coins: number; weapon: Weapon; weaponMods: WeaponMods; owned?: readonly Weapon[] }
 
-const WEAPON_IDS = ['pen', 'ruler', 'cup'] as const;
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
 const owns = (value: object, key: PropertyKey) => Object.prototype.hasOwnProperty.call(value, key);
 const rank = (value: unknown) => typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.min(MAX_ENHANCEMENT, Math.floor(value))) : 0;
@@ -23,7 +22,7 @@ function sanitizeMod(value: unknown): WeaponMod {
   return { enhancement: rank(value.enhancement), relic: isRelicId(value.relic) ? value.relic : null };
 }
 export function newWeaponMods(): WeaponMods {
-  return { pen: { enhancement: 0, relic: null }, ruler: { enhancement: 0, relic: null }, cup: { enhancement: 0, relic: null } };
+  return Object.fromEntries(WEAPON_IDS.map(id => [id, { enhancement: 0, relic: null }])) as WeaponMods;
 }
 export function sanitizeWeaponMods(raw: unknown): WeaponMods {
   const mods = newWeaponMods();
@@ -48,7 +47,8 @@ export function applyWeaponMods<T extends { damage: number; speed: number; range
 
 // Purchases reject malformed records rather than charging or silently repairing a live state.
 function currentMod(state: WeaponModState): WeaponMod | null {
-  if (!WEAPON_IDS.includes(state.weapon) || !record(state.weaponMods) || !owns(state.weaponMods, state.weapon)) return null;
+  if (!isWeapon(state.weapon) || !record(state.weaponMods) || !owns(state.weaponMods, state.weapon)) return null;
+  if (state.owned !== undefined && (!Array.isArray(state.owned) || !state.owned.includes(state.weapon))) return null;
   const mod = state.weaponMods[state.weapon];
   if (!record(mod) || !Number.isInteger(mod.enhancement) || mod.enhancement < 0 || mod.enhancement > MAX_ENHANCEMENT) return null;
   return mod.relic === null || isRelicId(mod.relic) ? mod : null;

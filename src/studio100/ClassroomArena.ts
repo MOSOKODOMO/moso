@@ -70,5 +70,10 @@ export class ClassroomArena {
    if(p.timer>5||p.y<STUDIO_GROUND-1){p.state='spent';p.timer=3;p.mesh.visible=false;}
   }this.sync();
  }
+ reflectNear(body:MotionBody,facing:number):number {
+  let count=0;for(const p of this.props){if(p.state!=='flying'||p.owner!=='boss'||(p.x-body.x)*facing<-.3||Math.abs(p.x-body.x)>3.4||Math.abs(p.y-body.y-1.4)>2.3||p.vx*facing>=0)continue;
+   p.owner='hero';p.vx=facing*Math.max(18,Math.abs(p.vx));p.vy=3;p.timer=0;count++;
+  }return count;
+ }
  private sync(){for(const p of this.props)p.mesh.position.set(p.x,p.y,4);}
 }

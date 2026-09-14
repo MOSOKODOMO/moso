@@ -3,6 +3,7 @@ import type { Place, Weapon } from './StudioState';
 import type { Teacher } from './Teachers';
 import { defaultAppearance, type CharacterAppearance } from './CharacterAppearance';
 import { paintCharacter } from './CharacterRenderer';
+import { itemGrip, paintItem } from './ItemArt';
 
 const INK = '#303430';
 export function rounded(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, fill: string | CanvasGradient, r = 8, stroke = true): void {
@@ -27,25 +28,17 @@ function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContex
 export function texture(el: HTMLCanvasElement): THREE.CanvasTexture {
   const t = new THREE.CanvasTexture(el); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter; return t;
 }
+/** The same item art supplies world props, paper dolls and shop icons. */
 export function toolDrawing(c: CanvasRenderingContext2D, kind: Weapon, x: number, y: number, scale = 1): void {
-  c.save(); c.translate(x, y); c.scale(scale, scale);
-  if (kind === 'cup') {
-    ellipse(c, 24, 1, 13, 15, '#e5c093'); ellipse(c, 24, 1, 6, 8, '#f9f0df');
-    rounded(c, -23, -22, 44, 47, '#c77658', 9); ellipse(c, -1, -21, 22, 6, '#f6e7c8');
-    ellipse(c, -1, -21, 16, 3, '#74533c', false); line(c, [-9, -36, -12, -44, -8, -52], '#eee0be', 3);
-    text(c, '100', -16, 9, 15, '#fff2d8');
-  } else if (kind === 'ruler') {
-    rounded(c, -10, -65, 23, 125, '#e6b762', 3);
-    for (let i = -55; i < 53; i += 10) line(c, [-9, i, i % 20 === -15 ? 5 : 0, i], '#775838', 2);
-  } else {
-    rounded(c, -6, -55, 13, 86, '#6d968d', 4); rounded(c, -7, -60, 15, 16, '#e3bb74', 3);
-    c.beginPath(); c.moveTo(-6, 31); c.lineTo(7, 31); c.lineTo(0, 49); c.closePath(); c.fillStyle = '#e4d4b2'; c.fill(); c.strokeStyle = INK; c.stroke();
-    line(c, [8, -44, 12, -44, 12, -21], '#f0d79c', 3);
-  }
-  c.restore();
+  paintItem(c, kind, x, y, scale);
 }
+const itemIcons = new Map<Weapon, string>();
 export function toolIcon(kind: Weapon): string {
-  const [el, c] = canvas(100, 100); c.translate(50, 52); if (kind !== 'cup') c.rotate(.65); toolDrawing(c, kind, 0, 0, .65); return el.toDataURL();
+  const cached = itemIcons.get(kind); if (cached) return cached;
+  const [el, c] = canvas(100, 100), grip = itemGrip(kind);
+  c.translate(50, 50); c.rotate(grip.iconAngle); c.scale(grip.iconScale, grip.iconScale);
+  toolDrawing(c, kind, -grip.iconX, -grip.iconY);
+  const icon = el.toDataURL(); itemIcons.set(kind, icon); return icon;
 }
 export function cupTexture(): THREE.Texture { const [el, c] = canvas(100, 100); toolDrawing(c, 'cup', 45, 55, 1.1); return texture(el); }
 

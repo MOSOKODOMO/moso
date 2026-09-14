@@ -56,6 +56,15 @@ export class ProjectileManager {
     });
   }
 
+  /** Returns nearby incoming shots to the caller's equipment projectile system. */
+  reflectNear(x:number,y:number,facing:number,onReflect:(damage:number)=>void):number {
+    let count=0;
+    for(let i=this.bolts.length-1;i>=0;i--){const bolt=this.bolts[i],dx=bolt.mesh.position.x-x;
+      if(dx*facing<-.3||Math.abs(dx)>3.2||Math.abs(bolt.mesh.position.y-y)>2||bolt.vx*facing>=0)continue;
+      onReflect(bolt.damage);this.scene.remove(bolt.mesh);bolt.mesh.geometry.dispose();bolt.mesh.material.dispose();this.bolts.splice(i,1);count++;
+    }return count;
+  }
+
   update(
     dt: number,
     targets: CombatTarget[],

@@ -1,0 +1,91 @@
+/* Equipment catalogue and backpack: real inventory controls with compact RPG cards. */
+.studio-app .studio-modal:has(.shop-panel),.studio-app .studio-modal:has(.backpack-panel) { box-sizing:border-box; width:min(1040px,100%); }
+.shop-panel,.backpack-panel { min-width:0; }
+.shop-toolbar,.backpack-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.shop-filters { display:flex; flex-wrap:wrap; gap:6px; }
+.studio-app .studio-modal .shop-panel button.shop-filter { min-height:37px; padding:8px 13px; font-size:11px; }
+.studio-app .studio-modal .shop-panel button.shop-filter[aria-pressed=true] { color:#162e3a; border-color:#b5e8d2; background:linear-gradient(#bee8cd,#82b8b0); text-shadow:0 1px #faffdd80; box-shadow:inset 0 1px #ffffdb99,0 2px #416c71; }
+.shop-wallet { display:flex; align-items:center; gap:7px; color:#ffdb88; font:bold 18px/1.2 'Trebuchet MS',sans-serif; white-space:nowrap; }
+.shop-wallet small { font-size:10px; font-weight:normal; }
+.shop-catalogue-line { display:flex; justify-content:space-between; flex-wrap:wrap; gap:5px 15px; margin:14px 1px 11px; color:#c4d7cf; font-size:11px; }
+.shop-catalogue-line small { font-size:10px; }
+.shop-grid,.backpack-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.shop-card,.backpack-card { display:flex; flex-direction:column; min-width:0; padding:13px; border:1px solid #9bb7ac80; border-radius:7px; background:linear-gradient(145deg,#36596530,#14273520); box-shadow:inset 0 1px #ebf3d926,0 2px #10283555; }
+.shop-card.is-owned { border-color:#a1c3ac; }
+.shop-card.is-equipped,.backpack-card.is-equipped { border-color:#f4d794; box-shadow:inset 0 0 0 1px #f2d39033,0 0 10px #dab36820; }
+.item-card-head { display:grid; grid-template-columns:65px minmax(0,1fr); align-items:center; gap:10px; min-height:65px; }
+.item-thumb { display:grid; place-items:center; height:63px; border:1px solid #afbcaa88; border-radius:6px; background:radial-gradient(ellipse at center,color-mix(in srgb,var(--item-tint) 23%,transparent),transparent 73%),#17344230; box-shadow:inset 0 1px #ffffff22,inset 0 -3px #10283530; }
+.item-thumb img { width:56px; height:56px; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 3px 1px #0c203a88); }
+.item-category { color:#a4d6cc; font-size:8px; letter-spacing:1px; text-transform:uppercase; }
+.studio-app .studio-modal .shop-panel .item-card-head h3,.studio-app .studio-modal .backpack-panel .item-card-head h3 { margin:5px 0; font-size:14px; line-height:1.2; color:#fff0c5; }
+.item-badge { display:block; color:#ead39e; font-size:10px; }
+.studio-app .studio-modal .shop-panel .item-basic,.studio-app .studio-modal .backpack-panel .item-basic { margin:11px 0 10px; font-size:11px; line-height:1.4; }
+.item-ability { padding:9px 10px; border:1px solid #799d9a55; border-left:2px solid var(--item-tint,#93c7bf); border-radius:4px; background:#19354222; }
+.item-ability b { font-size:11px; color:#d3ead5; }
+.studio-app .studio-modal .item-ability p { margin:4px 0 5px; font-size:10px; line-height:1.4; color:#bfcdc7; }
+.item-ability small { display:block; font-size:9px; line-height:1.4; color:#b4c9c3; }
+.studio-app .studio-modal .shop-panel .shop-card footer { display:flex; flex-direction:column; align-items:stretch; gap:8px; margin:12px 0 0; padding-top:0; flex:1; justify-content:flex-end; }
+.item-numbers { font-size:9px; color:#ccd8c7; }
+.studio-app .studio-modal .shop-panel button.shop-card-action { min-height:41px; width:100%; margin:0; padding:9px 6px; font-size:11px; }
+.studio-app .studio-modal .shop-panel button.shop-card-action.active,.studio-app .studio-modal .backpack-panel button.backpack-equip.active { border-color:#ebd09a; color:#ffe6b2; background:#7b704744; }
+.item-shortfall { display:block; font-size:9px; text-align:center; color:#d5b6a1; }
+.studio-app .studio-modal .shop-panel .shop-extras { margin-top:19px; padding:14px 0 0; border-top:1px solid #aac0ad88; }
+.shop-extras summary { display:list-item; cursor:pointer; color:#f3dda8; font-size:13px; }
+.shop-extras summary span { margin-left:10px; font-size:10px; color:#b8ccc4; font-weight:normal; }
+.shop-extra-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:12px; }
+.shop-extra-card { display:flex; flex-direction:column; min-width:0; padding:12px; border:1px solid #9eaaa566; border-radius:5px; background:#203c4930; }
+.extra-symbol { color:#e9cfa1; font-size:22px; }
+.studio-app .studio-modal .shop-panel .shop-extra-card h3 { margin:8px 0 4px; font-size:12px; }
+.studio-app .studio-modal .shop-panel .shop-extra-card p { margin:2px 0 10px; flex:1; font-size:10px; line-height:1.45; }
+.studio-app .studio-modal .shop-panel .shop-extra-card button { min-height:38px; padding:8px; font-size:10px; }
+.backpack-toolbar { margin-bottom:13px; font-size:12px; color:#c7d8ca; }
+.backpack-toolbar b { color:#ffe1a2; font-size:18px; }
+.backpack-equipped { font-size:11px; color:#eed4a1; }
+.backpack-quickslots { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; max-width:460px; margin:0 auto; }
+.backpack-slot { position:relative; display:grid; justify-items:center; gap:5px; padding:12px 8px 9px; border:1px solid #a2b7ab; border-radius:6px; background:#14314035; min-height:89px; }
+.backpack-slot.empty { border-style:dashed; border-color:#789595; }
+.backpack-slot kbd { position:absolute; top:5px; left:7px; font:10px 'Trebuchet MS',sans-serif; color:#dfd2a9; }
+.backpack-slot img { width:47px; height:47px; object-fit:contain; image-rendering:pixelated; }
+.backpack-slot strong { font-size:10px; font-weight:normal; color:#dbe3cc; text-align:center; }
+.empty-slot-symbol { display:grid; place-items:center; width:47px; height:47px; font-size:25px; color:#6e8d91; }
+.studio-app .studio-modal .backpack-panel button.slot-clear { position:absolute; top:4px; right:4px; margin:0; padding:0; min-width:26px; min-height:26px; border:1px solid #8d9a9855; border-radius:4px; background:transparent; font-size:18px; line-height:1; }
+.studio-app .studio-modal .backpack-panel .backpack-slot-help { text-align:center; font-size:11px; margin:13px 0 17px; }
+.backpack-card-actions { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-top:auto; padding-top:13px; }
+.studio-app .studio-modal .backpack-panel button.backpack-equip { padding:9px 10px; min-height:38px; font-size:11px; }
+.slot-assign { display:flex; align-items:center; gap:4px; }
+.slot-assign > span { color:#bfcfbf; font-size:9px; margin-right:2px; }
+.studio-app .studio-modal .backpack-panel .slot-assign button { width:29px; min-height:31px; padding:4px 0; font-size:11px; }
+.studio-app .studio-modal .backpack-panel .slot-assign button[aria-pressed=true] { color:#fff0c0; border-color:#edcd8b; background:#ac8b5655; }
+.backpack-empty,.workshop-empty { display:grid; justify-items:center; gap:10px; padding:29px 15px; text-align:center; }
+.backpack-empty > span { color:#aeccb9; font-size:36px; }
+.studio-app .studio-modal .backpack-empty h3,.studio-app .studio-modal .workshop-empty h3 { margin:2px 0; color:#f6e2b6; font-size:17px; }
+.studio-app .studio-modal .backpack-empty p,.studio-app .studio-modal .workshop-empty p { margin:0; max-width:370px; font-size:12px; }
+.backpack-empty small { max-width:300px; margin-top:7px; font-size:10px; color:#b9cbc4; line-height:1.45; }
+@media(max-width:840px) { .shop-grid,.backpack-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.shop-extra-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:540px) {
+ .shop-grid,.backpack-grid { grid-template-columns:1fr; gap:10px; }
+ .shop-toolbar { gap:10px; }
+ .studio-app .studio-modal .shop-panel button.shop-filter { min-height:39px; padding:8px 11px; }
+ .shop-wallet { font-size:17px; }
+ .shop-catalogue-line { margin:12px 0; }
+ .shop-card,.backpack-card { padding:12px; }
+ .item-card-head { grid-template-columns:68px minmax(0,1fr); }
+ .item-thumb img { width:59px; height:59px; }
+ .studio-app .studio-modal .shop-panel .item-card-head h3,.studio-app .studio-modal .backpack-panel .item-card-head h3 { font-size:15px; }
+ .item-category { font-size:9px; }
+ .item-ability b { font-size:12px; }
+ .studio-app .studio-modal .item-ability p { font-size:11px; }
+ .item-ability small { font-size:10px; }
+ .studio-app .studio-modal .shop-panel button.shop-card-action { min-height:44px; font-size:12px; }
+ .shop-extra-grid { grid-template-columns:1fr; }
+ .backpack-quickslots { gap:7px; }
+ .backpack-slot { padding:13px 4px 8px; }
+ .backpack-slot strong { font-size:9px; }
+ .studio-app .studio-modal .backpack-panel .slot-assign button { min-height:37px; width:35px; }
+}
+
+@media(max-width:540px) { .studio-app .studio-modal .backpack-panel .slot-assign button { width:44px; min-height:44px; }.studio-app .studio-modal .backpack-panel button.backpack-equip { min-height:44px; }.studio-app .studio-modal .backpack-panel button.slot-clear { min-width:32px; min-height:32px; } }
+.item-tags { display:flex; align-items:center; flex-wrap:wrap; gap:5px 7px; }
+.item-rank { display:inline-block; padding:2px 5px; border:1px solid #aab7ad80; border-radius:3px; color:#d6ddd1; background:#a8b0a422; font:bold 8px/1.25 Tahoma,sans-serif; letter-spacing:.2px; }
+.item-rank[data-rank=Uncommon] { color:#bff0b6; border-color:#88c79799; background:#78a98126; }.item-rank[data-rank=Rare] { color:#b4dcff; border-color:#80b4dc99; background:#6499c326; }.item-rank[data-rank=Epic] { color:#e2c1ff; border-color:#b391dcaa; background:#a277c72e; }
+@media(max-width:540px) { .item-rank { font-size:9px; } }

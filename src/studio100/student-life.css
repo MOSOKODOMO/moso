@@ -1,0 +1,142 @@
+/* Student-life HUD: compact world labels and real inventory/activity controls. */
+.studio-app .mika-speech { box-sizing:border-box; position:absolute; transform:translate(-50%,-100%); width:238px; max-width:calc(100vw - 24px); padding:11px 14px; border:1px solid #decda5a6; border-radius:8px; background:rgb(29 47 61 / 50%); color:#ffeccd; box-shadow:inset 0 1px #fff2cf30,0 3px 12px #1325383b; text-shadow:0 1px 2px #172b38; font:bold 12px/1.45 'Trebuchet MS',sans-serif; text-align:center; pointer-events:none; backdrop-filter:blur(3px); }
+.mika-speech small { display:block; margin-top:5px; color:#d3e4d7; font-size:10px; font-weight:normal; line-height:1.4; }
+.mika-speech::after { content:''; position:absolute; bottom:-7px; left:calc(50% - 6px); width:11px; height:11px; transform:rotate(45deg); border-right:1px solid #decda599; border-bottom:1px solid #decda599; background:rgb(29 47 61 / 50%); }
+.studio-app :is(#s-restaurant-sign,#s-job-label,#s-laptop-label) { box-sizing:border-box; max-width:calc(100vw - 24px); padding:8px 12px; border:1px solid #ccb99599; border-radius:5px; background:rgb(23 46 57 / 50%); color:#fff0c6; box-shadow:inset 0 1px #fff2ca2b,0 2px #19334145; text-shadow:0 1px 2px #122b37; font-size:11px; line-height:1.35; white-space:normal; }
+.studio-app #s-restaurant-sign { padding:9px 15px; color:#ffe2a0; border-color:#e2bd78a6; letter-spacing:.7px; font-weight:bold; }
+.studio-app #s-laptop-label { color:#e2d4ff; border-color:#c5b2dda6; }
+
+/* A blank slot stays visibly blank until equipment is bought. */
+.studio-app .weapon-dock { flex:none; align-items:stretch; }
+.studio-app .weapon-button.empty-slot { border-style:dashed; border-color:#aabaae80; background:rgb(19 43 57 / 35%); }
+.empty-slot-mark { display:none; color:#adc6c0; font:22px/1 Tahoma,sans-serif; text-shadow:0 1px #102b3a; }
+.weapon-button.empty-slot .empty-slot-mark { display:block; }.weapon-button:not(.empty-slot) .empty-slot-mark { display:none; }
+.studio-app .bag-button { flex:none; width:43px; min-height:46px; padding:5px 3px; border:1px solid #c6b58b99; border-radius:4px; color:#ffe0a3; background:rgb(70 73 56 / 50%); box-shadow:inset 0 1px #f5e7c333,inset 0 -3px #102b3d66; font:bold 10px/1.25 Tahoma,sans-serif; text-shadow:0 1px #142c36; }
+.bag-button::before { content:'▣'; display:block; color:#e1cca2; font-size:18px; line-height:1.05; margin-bottom:3px; }
+.studio-app .bag-button:hover:not(:disabled),.studio-app .bag-button:focus-visible { border-color:#f0d397; background:rgb(109 104 71 / 50%); }
+.studio-app .equipment-skill { position:relative; box-sizing:border-box; flex:none; width:112px; min-height:57px; padding:17px 8px 8px; border:1px solid #d2b3ecbb; border-radius:5px; color:#f6dcff; background:rgb(77 58 101 / 50%); box-shadow:inset 0 1px #eadcfc55,inset 0 -3px #132c4159,0 0 7px #b693d522; text-shadow:0 1px #273249; font:bold 11px/1.2 Tahoma,sans-serif; overflow:hidden; }
+.equipment-skill kbd { position:absolute; top:4px; left:6px; color:#fff0d0; font:9px/1 Tahoma,sans-serif; }
+.equipment-skill > span { display:block; overflow-wrap:anywhere; }
+.studio-app .equipment-skill:hover:not(:disabled),.studio-app .equipment-skill:focus-visible { border-color:#f3d9ff; background:rgb(99 77 125 / 50%); }
+.studio-app .equipment-skill:disabled { opacity:.58; }
+.studio-interaction { min-width:0; }.studio-controls { max-width:100%; box-sizing:border-box; }
+
+/* Seven Knowledge cells fit inside the upper-left mission panel at every size. */
+.studio-app .journey-dock { box-sizing:border-box; width:234px; }
+.journey-dock #s-knowledge-boxes { margin:8px 0 5px; line-height:0; }
+.journey-dock .knowledge-boxes { display:grid; width:100%; max-width:204px; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+.journey-dock .knowledge-box { box-sizing:border-box; width:100%; height:24px; }
+.journey-dock #s-knowledge { margin:6px 0 0; line-height:1.4; }
+.studio-app .journey-dock :is(.calendar-button,.submit-study) { display:block; width:100%; min-height:29px; margin-top:8px; padding:6px 8px; border:1px solid #bcb58b99; border-radius:4px; color:#f3e8bf; background:rgb(51 77 81 / 45%); box-shadow:inset 0 1px #fff2c32b,0 2px #112b3b4d; font:bold 10px/1.25 Tahoma,sans-serif; text-shadow:0 1px #143341; }
+.studio-app .journey-dock .calendar-button:hover:not(:disabled) { border-color:#ffe0a0; background:rgb(81 104 99 / 50%); }
+.studio-app .journey-dock .submit-study { border-color:#b9e0aa; color:#e4ffda; background:rgb(58 110 88 / 50%); }
+.studio-app .journey-dock .submit-study:hover:not(:disabled) { background:rgb(83 136 94 / 50%); }
+
+@media(max-width:1050px) {
+ .studio-app .equipment-skill { width:96px; min-height:53px; font-size:10px; }
+ .studio-app .bag-button { width:39px; }
+ .studio-app .journey-dock { width:213px; }
+}
+@media(max-width:700px) {
+ .studio-app .journey-dock { width:205px; }
+ .journey-dock .knowledge-boxes { gap:3px; }.journey-dock .knowledge-box { height:22px; font-size:13px; }
+ .studio-app .mika-speech { width:218px; padding:9px 11px; font-size:11px; }.mika-speech small { font-size:9px; }
+ .studio-app :is(#s-restaurant-sign,#s-job-label,#s-laptop-label) { font-size:10px; padding:7px 10px; }
+ .studio-app #s-restaurant-sign { max-width:220px; }
+}
+@media(pointer:coarse) {
+ .studio-app .bag-button { min-height:44px; width:40px; }
+ .studio-app .equipment-skill { min-height:44px; width:102px; padding:8px; }
+ .equipment-skill kbd { display:none; }
+ .studio-app .journey-dock { width:204px; }
+ .studio-app .journey-dock :is(.calendar-button,.submit-study) { min-height:32px; margin-top:6px; padding:7px; }
+}
+@media(pointer:coarse) and (orientation:portrait) {
+ .studio-dock { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:7px; align-items:end; }
+ .weapon-dock { grid-row:2; grid-column:1; justify-self:start; }
+ .equipment-skill { grid-row:2; grid-column:2; justify-self:end; }
+ .move-dock { grid-row:1; grid-column:1/-1; justify-self:end; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) {
+ .studio-app .journey-dock { top:62px; width:190px; left:12px; padding:7px 9px; }
+ .journey-dock #s-knowledge-boxes { margin:6px 0 4px; }.journey-dock .knowledge-boxes { gap:3px; }.journey-dock .knowledge-box { height:20px; font-size:12px; }
+ .journey-dock #s-knowledge { display:block; margin-top:4px; font-size:8px; }.journey-dock b { margin:2px 0 4px; font-size:9px; }
+ .studio-app .journey-dock :is(.calendar-button,.submit-study) { min-height:25px; margin-top:5px; padding:4px; font-size:9px; }
+ .studio-dock { display:flex; align-items:end; justify-content:center; left:185px; right:185px; gap:5px; }
+ .studio-app .bag-button { width:34px; min-height:44px; font-size:9px; }.bag-button::before { font-size:16px; }
+ .studio-app .equipment-skill { width:90px; min-height:50px; font-size:10px; }
+ .studio-app .move-dock { gap:3px; }.studio-app .move-dock button { width:35px; }
+ .studio-app .mika-speech { width:200px; padding:8px 10px; font-size:10px; }
+ .mika-speech small { font-size:8px; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) and (max-width:760px) {
+ .studio-dock { display:grid; grid-template-columns:minmax(0,1fr) auto; left:173px; right:173px; gap:5px; }
+ .weapon-dock { grid-row:2; grid-column:1; justify-self:start; }.equipment-skill { grid-row:2; grid-column:2; justify-self:end; }
+ .move-dock { grid-row:1; grid-column:1/-1; justify-self:end; }
+ .studio-app .equipment-skill { width:83px; min-height:44px; font-size:9px; }
+}
+@media(prefers-reduced-motion:reduce) { .studio-app :is(.equipment-skill,.bag-button,.calendar-button,.submit-study) { transition:none; } }
+@media(pointer:coarse) and (orientation:portrait) {
+ .studio-app .mika-speech { transform:translate(-50%,0); margin-top:18px; }
+}
+@media(pointer:coarse) and (orientation:portrait) and (max-height:740px) {
+ .studio-app .mika-speech { margin-top:64px; }.mika-speech small { display:none; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) and (max-width:760px) {
+ .studio-dock { left:190px; right:190px; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) and (max-width:640px) {
+ .studio-dock { left:160px; right:160px; }.studio-app .touch-controls button { width:44px; height:44px; }.touch-movement,.touch-actions { gap:4px; }
+ .studio-app .bag-button { width:32px; }.studio-app .weapon-button { width:32px; }
+}
+/* Rest stays visible on the actual bed; the timer is a small status panel. */
+.studio-app .class-overlay:not(.is-studying) { box-sizing:border-box; top:114px; bottom:auto; right:24px; left:auto; transform:none; width:216px; max-width:calc(100vw - 24px); padding:10px 13px; border:1px solid #bdc6b0aa; border-radius:6px; background:rgb(26 47 60 / 50%); color:#f4efd2; box-shadow:inset 0 1px #fff4d333,0 3px 12px #16304033; pointer-events:none; }
+.class-overlay:not(.is-studying) h3,.class-overlay:not(.is-studying) #s-class-quote { display:none; }
+.class-overlay:not(.is-studying) .eyebrow { font-size:9px; letter-spacing:1.2px; }
+.class-overlay:not(.is-studying) .stamina-track { height:6px; margin:8px 0 6px; background:#aec4c32b; }
+.class-overlay:not(.is-studying) .stamina-track i { background:linear-gradient(90deg,#a9c7e4,#d9c3ec); }
+.class-overlay:not(.is-studying) #s-class-progress { color:#e7e6d5; font-size:11px; margin:0; }
+@media(pointer:coarse) and (orientation:portrait) {
+ .studio-app .class-overlay { box-sizing:border-box; top:114px; right:12px; left:auto; bottom:auto; transform:none; width:154px; max-width:calc(100vw - 234px); padding:9px 8px; }
+ .class-overlay.is-studying .eyebrow,.class-overlay:not(.is-studying) .eyebrow { font-size:8px; letter-spacing:.5px; }
+ .class-overlay.is-studying #s-class-progress,.class-overlay:not(.is-studying) #s-class-progress { font-size:10px; line-height:1.4; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) {
+ .studio-app .class-overlay { box-sizing:border-box; top:62px; right:14px; left:auto; bottom:auto; transform:none; width:200px; padding:8px 11px; }
+}
+@media(pointer:coarse) and (orientation:portrait) and (max-width:360px) {
+ .studio-app .journey-dock { width:184px; }.studio-app .class-overlay { max-width:calc(100vw - 216px); }
+ .studio-app .touch-controls button { width:42px; height:48px; }.touch-movement,.touch-actions { gap:4px; }
+ .studio-app .equipment-skill { width:90px; }.studio-app .bag-button { width:36px; }.studio-app .weapon-button { width:36px; }
+}
+/* Keep the most-used phone controls below the student's feet. */
+@media(pointer:coarse) and (orientation:portrait) {
+ .studio-app .weapon-dock { gap:3px; padding:4px; }
+ .studio-app .weapon-button { width:34px; }.studio-app .bag-button { width:34px; }
+ .studio-app .equipment-skill { grid-row:1; grid-column:1; justify-self:start; }
+ .studio-app .move-dock { grid-row:2; grid-column:2; justify-self:end; gap:3px; padding:4px; }
+ .studio-app .move-dock button { width:43px; }
+}
+@media(pointer:coarse) and (orientation:portrait) and (max-width:360px) {
+ .studio-app .weapon-button { width:30px; }.studio-app .bag-button { width:30px; }
+ .studio-app .move-dock { gap:2px; padding:3px; }.studio-app .move-dock button { width:32px; font-size:24px; }
+ .studio-app .move-dock button::after { font-size:7px; }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) and (max-width:760px) {
+ .studio-app .move-dock { position:fixed; top:134px; right:14px; grid-row:auto; grid-column:auto; }
+ .studio-dock { display:flex; justify-content:space-between; }
+}
+@media(pointer:coarse) and (orientation:portrait) {
+ .studio-app .class-overlay.is-studying,.studio-app .class-overlay:not(.is-studying) { box-sizing:border-box; top:114px; right:12px; left:auto; bottom:auto; transform:none; width:154px; max-width:calc(100vw - 234px); padding:9px 8px; }
+}
+@media(pointer:coarse) and (orientation:portrait) and (max-width:360px) {
+ .studio-app .class-overlay.is-studying,.studio-app .class-overlay:not(.is-studying) { max-width:calc(100vw - 216px); }
+}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:550px) {
+ .studio-app .class-overlay.is-studying,.studio-app .class-overlay:not(.is-studying) { box-sizing:border-box; top:62px; right:14px; left:auto; bottom:auto; transform:none; width:200px; padding:8px 11px; }
+}
+/* Sleeping is a brief locked action; keep the pillow visible on small phones. */
+.studio-app:has(#s-class:not(.is-studying):not([hidden])) .journey-dock :is(#s-calendar,#s-submit-study) { display:none; }
+/* Calendar actions are locked during a timed activity; keep the student's head clear. */
+.studio-app:has(#s-class:not([hidden])) .journey-dock :is(#s-calendar,#s-submit-study) { display:none; }
+@media(pointer:coarse) { .studio-app:has(#s-class:not([hidden])) #touch-interact { font-size:10px; } }
