@@ -1,0 +1,14 @@
+.studio-app [hidden] { display:none !important; }
+.outdoor-day-card {position:absolute;top:110px;left:18px;display:flex;gap:5px;flex-direction:column;padding:10px 16px;color:#fbf0c5;background:rgba(30,38,43,.48);border:1px solid rgba(229,218,166,.5);border-radius:8px;pointer-events:none;text-shadow:0 1px 2px #222;}
+.outdoor-day-card strong {font-size:17px;letter-spacing:.03em;}
+.outdoor-day-card span {font-size:13px;color:#d6e6df;}
+.outdoor-day-card small {font-size:11px;color:#e7cdb0;}
+.outdoor-day-card small:empty {display:none;}
+.studio-app .lift-hotspot {position:absolute;padding:0;border:1px solid transparent;border-radius:5px;background:transparent;box-shadow:none;z-index:5;pointer-events:auto;touch-action:manipulation;color:#fff0bb;min-width:0;}
+.lift-hotspot span {position:absolute;top:2px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:5px 8px;background:rgba(27,35,40,.45);border:1px solid rgba(235,219,171,.5);border-radius:5px;font-size:11px;opacity:0;}
+.studio-app .lift-hotspot.is-near,.studio-app .lift-hotspot:focus-visible {border-color:rgba(245,224,161,.55);background:rgba(255,235,179,.04);}
+.lift-hotspot.is-near span,.lift-hotspot:focus-visible span {opacity:1;}
+.studio-app .white-door-transition {background:#fff;backdrop-filter:none;}
+.white-door-transition .transition-panel,.white-door-transition::before,.white-door-transition::after {display:none !important;}
+@media(max-width:700px) {.outdoor-day-card{top:83px;left:8px;padding:7px 10px}.outdoor-day-card strong{font-size:13px}.outdoor-day-card span{font-size:11px}.outdoor-day-card small{font-size:9px}.lift-hotspot span{font-size:10px;}}
+@media(max-height:500px) {.outdoor-day-card{top:62px;padding:5px 9px}.outdoor-day-card strong{font-size:12px}.outdoor-day-card span{font-size:10px}}

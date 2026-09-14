@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import type { CharacterAppearance } from './CharacterAppearance';
 import { paintCharacter } from './CharacterRenderer';
 import { paintItem } from './ItemArt';
+import { HOME_POINTS, roomPoint, roomSourcePoint } from './RoomLayout';
 
-// Coordinates follow the existing 32×18 apartment illustration, not the walking floor.
-const BED_HEAD = { x: 7.8, y: 9.25, width: 2.75, height: 2.2 };
+// The pillow follows the apartment transform; the portrait matches the normal player scale.
+const BED_HEAD = HOME_POINTS.sleep.head;
 const ROOM_IMAGE_WIDTH = 1120, ROOM_IMAGE_HEIGHT = 630;
 
 /** A portrait on the actual pillow, with the apartment's own duvet in front of it. */
@@ -35,12 +36,14 @@ export class DailyActivityVisuals {
       [398,382],[375,385],[353,382],[327,381],[309,383],[290,381]];
     const outline = new THREE.Shape();
     edge.forEach(([x,y], index) => {
-      const wx = x / ROOM_IMAGE_WIDTH * 32, wy = 18 - y / ROOM_IMAGE_HEIGHT * 18;
-      if (index) outline.lineTo(wx, wy); else outline.moveTo(wx, wy);
+      const point=roomPoint('home',x/ROOM_IMAGE_WIDTH*32,18-y/ROOM_IMAGE_HEIGHT*18);
+      if (index) outline.lineTo(point.x,point.y); else outline.moveTo(point.x,point.y);
     }); outline.closePath();
     const geometry = new THREE.ShapeGeometry(outline), position = geometry.getAttribute('position');
     const uv: number[] = [];
-    for (let n = 0; n < position.count; n++) uv.push(position.getX(n) / 32, position.getY(n) / 18);
+    for (let n = 0; n < position.count; n++) {
+      const source=roomSourcePoint('home',position.getX(n),position.getY(n));uv.push(source.x/32,source.y/18);
+    }
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     this.blanket = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }));
     this.blanket.position.z = -.3; this.blanket.renderOrder = 4; this.blanket.visible = false;

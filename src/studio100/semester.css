@@ -33,3 +33,16 @@
 
 .studio-app .studio-modal .semester-panel .semester-hd-reward { display:block; margin:0 0 12px; color:#e2c7f2; font-size:10px; line-height:1.5; }
 @media(min-width:601px) and (max-width:760px) { .semester-calendar { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+
+/* Weekends close classes, while work and homework remain available. */
+.semester-school-status { display:flex; flex-direction:column; gap:5px; padding:10px 12px; margin:0 0 12px; border:1px solid #8fb6a86b; border-radius:5px; background:rgb(66 98 91 / 25%); }
+.semester-school-status strong { color:#d6e7d2; font-size:12px; }
+.semester-school-status span { color:#bed1c7; font-size:10px; line-height:1.5; }
+.semester-school-status.school-closed { border-color:#c7a17c80; background:rgb(117 82 61 / 22%); }
+.semester-school-status.school-closed strong { color:#eed2ad; }
+.calendar-weekday { display:block; margin:-3px 0 7px; color:#b9d0c5; font-size:9px; line-height:1.35; overflow-wrap:anywhere; }
+.calendar-school-closed { display:block; width:fit-content; max-width:100%; margin:0 0 7px; padding:3px 4px; border:1px solid #cba27759; border-radius:3px; color:#e4c7a4; background:#a3714933; font-size:8px; line-height:1.35; }
+.semester-day.weekend-day { border-style:dashed; border-color:#b2987c99; background:#554b4438; }
+.semester-day.weekend-day.current { border-style:solid; border-color:#ffe0a1; }
+.studio-app .studio-modal .semester-panel .semester-cycle-note { margin:14px 0 0; color:#abc6bd; font-size:10px; line-height:1.5; }
+@media(max-width:600px) { .calendar-weekday { font-size:10px; }.calendar-school-closed { font-size:9px; padding:4px 6px; } }

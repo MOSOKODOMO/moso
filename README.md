@@ -4,7 +4,7 @@ A cute Melbourne architecture-student adventure with nine studios, two ways to p
 
 Create your student, balance class, homework and restaurant shifts, and rest in your apartment. Building 100 has its lobby on G, Studios 1–9 on L1–L9, the Student Gym on B1 and the Model Workshop on B2. Patrik teaches Studio 1. Completing Studio 9 unlocks exhibition duels with all 33 teachers. Later studios increase teacher health, damage, speed and tactical variety.
 
-Each studio has a 14-day semester calendar. Submit at 5 Knowledge for a pass, or keep studying to 7 Knowledge for a High Distinction and a one-time 90-coin reward. Winning an instructor duel also passes the studio. Days after fourteen are catch-up days; unfinished work and earned Knowledge are kept.
+The outdoor calendar shows Monday–Sunday and alternates Semester 1 and Semester 2 every 14 in-game days, then repeats. Classes are closed on Saturdays and Sundays; the gym, workshop, restaurant and apartment remain available. Each studio also keeps its own 14-day study calendar. Submit at 5 Knowledge for a pass, or keep studying to 7 Knowledge for a High Distinction and a one-time 90-coin reward. Winning an instructor duel also passes the studio. Days after fourteen are catch-up days; unfinished work and earned Knowledge are kept.
 
 ## Student life
 
@@ -16,7 +16,9 @@ Each studio has a 14-day semester calendar. Submit at 5 Knowledge for a pass, or
 
 Up to two completed activities share each day's stamina budget. Each costs half the maximum stamina recorded when the first activity finishes, so a level-up cannot change the price halfway through the day. Class and homework can each be completed once per studio per day; restaurant work can fill either or both activity slots. Movement or jumping cancels an unfinished activity without spending stamina or awarding partial rewards. Ordinary classes award learning and XP; restaurant shifts are the repeatable source of coins.
 
-Walk right past student accommodation to find Lucky Lantern Noodles. Working hops your character behind the counter for the shift. At home, the laptop is on the right; sleeping places your customized character on the bed's pillow, under the existing blanket, restores stamina and starts a new day.
+Walk right past student accommodation to find Lucky Lantern Noodles. Two seated customers eat at the restaurant tables. Walking stays in front of the cashier counter; starting a shift hops your character behind it. At home, jump onto the chair or desk on the right to reach the laptop; sleeping places your customized character on the bed's pillow, under the existing blanket, restores stamina and starts a new day.
+
+The apartment uses a smaller, consistent furniture scale. Beds, chairs, tables and counters in the apartment, restaurant and mysterious shop are jumpable; press S or the down control to drop to a lower surface. Knowledge and studio completion appear only inside Building 100. Other scenes show the weekday and semester.
 
 ## Equipment and upgrades
 
@@ -30,9 +32,9 @@ The nine studios are Foundations, Form & Space, Material & Texture, Structure & 
 
 ## Play
 
-Desktop: A/D or arrows move, W jumps, S drops through platforms, Space attacks, K uppercuts, L jump-kicks, Shift dodges, and E interacts or grabs/throws classroom objects. 1/2/3 select quick slots, R uses the equipped item's skill, I opens the backpack, and M opens the building directory. Escape opens the Menu, where you can save, restart, change key bindings and adjust graphics or sound.
+Desktop: A/D or arrows move, W jumps, S drops through platforms, Space attacks, K uppercuts, L jump-kicks, Shift dodges, and E interacts or grabs/throws classroom objects. 1/2/3 select quick slots, R uses the equipped item's skill, I opens the backpack, and M opens the floor directory only while standing in front of either lift in the Building 100 lobby. Exit classrooms through the far-left door to fade back to the ground-floor lobby. Escape opens the Menu, where you can save, restart, change key bindings and adjust graphics or sound.
 
-Phones: use the on-screen movement, jump, interaction and attack controls, plus the equipment-skill and backpack buttons. Physical-move buttons sit above the movement controls. Both portrait and landscape layouts are supported. Add the page to your home screen for a standalone window. An internet connection is required; offline play is not provided.
+Phones: stand in front of either Building 100 lobby lift and tap its door to choose a floor. Use the on-screen movement, jump, interaction and attack controls, plus the equipment-skill and backpack buttons. Physical-move buttons sit above the movement controls. Both portrait and landscape layouts are supported. Add the page to your home screen for a standalone window. An internet connection is required; offline play is not provided.
 
 Progress is stored in this browser on this device. It does not sync between devices or automatically transfer from the local preview to the online game.
 

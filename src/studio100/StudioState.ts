@@ -17,6 +17,18 @@ export const KNOWLEDGE_REQUIRED = 7;
 export const PASS_KNOWLEDGE = 5;
 export const HOMEWORK_SECONDS = 12;
 export const SEMESTER_DAYS = 14;
+export const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+export type CalendarDaySource = number | Pick<StudioSave, 'day'>;
+const calendarDay = (source: CalendarDaySource) => {
+  const day = typeof source === 'number' ? source : source.day;
+  return Number.isFinite(day) ? Math.max(1, Math.floor(day)) : 1;
+};
+/** Day one is Monday; the game calendar continues across studio changes. */
+export const weekdayIndex = (source: CalendarDaySource): number => (calendarDay(source) - 1) % WEEKDAYS.length;
+export const weekdayName = (source: CalendarDaySource): typeof WEEKDAYS[number] => WEEKDAYS[weekdayIndex(source)];
+export const isSchoolDay = (source: CalendarDaySource): boolean => weekdayIndex(source) < 5;
+/** Two global fourteen-day semesters repeat without resetting any saved progress. */
+export const semesterNumber = (source: CalendarDaySource): 1 | 2 => (Math.floor((calendarDay(source) - 1) / SEMESTER_DAYS) % 2 + 1) as 1 | 2;
 export const HD_REWARD = 90;
 export const STUDIO_NAMES = ['Foundations', 'Form & Space', 'Material & Texture', 'Structure & Balance', 'Light & Shadow', 'Dwelling & Place', 'City & Context', 'Composition & Detail', 'The Grand Atelier'];
 export const WEAPONS = ITEMS;
@@ -184,7 +196,7 @@ const canLearn = (s: StudioSave) => Number.isInteger(s.studio) && s.studio >= 1 
   s.knowledge[s.studio - 1] >= 0 && s.knowledge[s.studio - 1] < KNOWLEDGE_REQUIRED;
 
 export function completeClass(s: StudioSave): { ok: boolean; cleared: boolean } {
-  if (s.place !== 'studio' || !canLearn(s) || !canSpendActivity(s, 'class')) return { ok: false, cleared: false };
+  if (s.place !== 'studio' || !isSchoolDay(s) || !canLearn(s) || !canSpendActivity(s, 'class')) return { ok: false, cleared: false };
   beginSemester(s);
   spendActivity(s, 'class');
   s.knowledge[s.studio - 1] = Math.min(KNOWLEDGE_REQUIRED, knowledgeScore(s.knowledge[s.studio - 1]) + 1);

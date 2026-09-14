@@ -15,9 +15,12 @@ import { EquipmentFX } from './EquipmentFX';
 import { skillPlan, type SkillEvent, type EquipmentSkillPlan } from './EquipmentSkills';
 import { laptopTexture } from './StudentLifeArt';
 import { DailyActivityVisuals } from './DailyActivityVisuals';
+import { roomLayout, roomView, placePlatforms, HOME_POINTS } from './RoomLayout';
+import { RestaurantCustomers } from './RestaurantCustomers';
+import { ClassroomDoor } from './ClassroomDoor';
 import { applyWeaponMods, enhanceWeapon, embedRelic, isRelicId } from './WeaponMods';
 import { workshopPanel } from './WorkshopPanel';
-import { buyItem, PASS_KNOWLEDGE, SEMESTER_DAYS, HD_REWARD, WORK_SECONDS, WORK_PAY, HOMEWORK_SECONDS, workCost, homeworkCost, completeWorkShift, completeHomework, hasActivity, beginSemester, semesterDay, CHARMS, CLASS_SECONDS, KNOWLEDGE_REQUIRED, SAVE_KEY, STUDIO_NAMES, WEAPONS, buyCharm, buyUpgrade, classCost, completeClass, completeStudio, maxStamina, newStudent, rest, sanitizeSave, unlockedStudio, upgradeCost, xpNeeded, type Charm, type Place, type StudioSave, type Upgrade, type Weapon } from './StudioState';
+import { weekdayName, semesterNumber, isSchoolDay, buyItem, PASS_KNOWLEDGE, SEMESTER_DAYS, HD_REWARD, WORK_SECONDS, WORK_PAY, HOMEWORK_SECONDS, workCost, homeworkCost, completeWorkShift, completeHomework, hasActivity, beginSemester, semesterDay, CHARMS, CLASS_SECONDS, KNOWLEDGE_REQUIRED, SAVE_KEY, STUDIO_NAMES, WEAPONS, buyCharm, buyUpgrade, classCost, completeClass, completeStudio, maxStamina, newStudent, rest, sanitizeSave, unlockedStudio, upgradeCost, xpNeeded, type Charm, type Place, type StudioSave, type Upgrade, type Weapon } from './StudioState';
 import { STUDIO_GROUND, CLASSROOM_PLATFORMS, standingOn, hitImpulse, resetMotion, separateBodies, stepMotion } from './CombatMotion';
 import { CombatEffects } from './CombatEffects';
 import { SceneTransition } from './SceneTransition';
@@ -37,9 +40,11 @@ import './shop.css';
 import './semester.css';
 import './workshop.css';
 import './student-life.css';
+import './room-navigation.css';
 
 const FLOOR = STUDIO_GROUND;
 const LOBBY_STUDENT_SCALE = .82;
+const LOBBY_LIFTS=[13.7,18.8] as const;
 const MENU_BINDINGS: Partial<Record<ActionName,string>> = {moveLeft:'Move left',moveRight:'Move right',jump:'Jump',attack:'Attack',interact:'Interact / grab / throw',skill1:'Uppercut',skill2:'Jump kick',skill3:'Dodge',stats:'Drop through platform',useHp:'Equipment skill',inventory:'Backpack'};
 const roomAsset = (file:string) => new URL(`studio100/${file}`,document.baseURI).href;
 type Modal = 'backpack' | 'semester' | 'map' | 'instructor' | 'shop' | 'clerk' | 'mystery' | 'skills' | 'tools' | 'home' | 'pause' | 'passed' | 'faculty' | 'exhibition' | 'exhibition-won' | 'character' | null;
@@ -134,6 +139,8 @@ export class StudioGame {
   private laptop:THREE.Mesh;
   private counterFront:THREE.Mesh;
   private dailyVisuals:DailyActivityVisuals;
+  private restaurantCustomers:RestaurantCustomers;
+  private classroomDoor:ClassroomDoor;
   private music=new StudioMusic();
   private lowGraphics=false;
   private warning: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
@@ -229,6 +236,9 @@ export class StudioGame {
     this.effects = new CombatEffects(this.renderer.scene);
     this.equipmentFX = new EquipmentFX(this.renderer.scene);
     this.dailyVisuals=new DailyActivityVisuals(this.renderer.scene);
+    this.restaurantCustomers=new RestaurantCustomers(this.renderer.scene,this.backgrounds.get('restaurant')!);
+    this.classroomDoor=new ClassroomDoor(this.renderer.scene);
+    const laptop=HOME_POINTS.homework.laptop;this.laptop.scale.set(laptop.width/2.5,laptop.height/1.6,1);this.laptop.position.set(laptop.x,laptop.y,1);
     this.arena = new ClassroomArena(this.renderer.scene);
     this.hero.onHit = (damage, direction) => this.hurt(damage, direction);
     this.boss.onHit = (damage, direction) => this.hitInstructor(damage, direction);
@@ -294,23 +304,22 @@ export class StudioGame {
   private shadow(x: number) { const s = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ color: '#343d31', transparent: true, opacity: .18, depthWrite: false })); s.scale.set(1, .13, 1); s.position.set(x, FLOOR + .05, -.1); this.renderer.scene.add(s); return s; }
   private resize(): void {
     // Cover the viewport without stretching the art or revealing space outside a room.
-    const a = this.renderer.aspect, w = Math.min(32, 18 * a), h = w / a;
-    const bottom = Math.max(0, Math.min(18-h, FLOOR-h*.2));
-    this.camera.left = 16-w/2; this.camera.right = 16+w/2;
-    this.camera.bottom = bottom; this.camera.top = bottom+h; this.camera.updateProjectionMatrix();
+    const view=roomView(this.state.place,this.renderer.aspect),center=roomLayout(this.state.place).width/2;
+    this.camera.left=center-view.width/2;this.camera.right=center+view.width/2;
+    this.camera.bottom=view.bottom;this.camera.top=view.top;this.camera.updateProjectionMatrix();
     this.followCamera(1,true);
   }
   private shell(): string {
     return `<header class="studio-top"><div class="studio-brand"><strong>FIGHT YOUR WAY<br><em>TO ARCHITECTURE</em></strong><div class="eyebrow">A Melbourne student adventure</div></div>
       <div class="student-stats"><div class="stats-line"><b id="s-level"></b><span id="s-stamina"></span></div><div class="stamina-track" role="meter" aria-label="Stamina" id="s-meter"><i id="s-fill"></i></div></div>
       <div class="studio-location"><span class="eyebrow" id="s-location-code"></span><strong id="s-location"></strong></div>
-      <div class="studio-meta"><span class="day" id="s-day"></span><span class="coin" id="s-coins"></span><button data-action="travel:lobby" id="s-lobby-button" aria-label="Go to campus">Campus</button><button data-action="map" id="s-map-button" aria-label="Open building map">Building ↗</button><button data-action="pause" aria-label="Open game menu">Menu</button></div></header>
+      <div class="studio-meta"><span class="day" id="s-day"></span><span class="coin" id="s-coins"></span><button data-action="pause" aria-label="Open game menu">Menu</button></div></header>
       <div class="studio-nameplate context-hint" id="s-context-hint"></div>
       <div class="studio-nameplate crafting-label" id="s-crafting-label">Crafting table</div>
       <div class="studio-nameplate" id="s-chair-label">Your desk<small>Study · +1 Knowledge</small></div><div class="studio-nameplate character-name" id="s-boss-label"></div>
       <div class="studio-nameplate mystery-nameplate" id="s-mystery-label">The Other Cupboard</div><div class="studio-nameplate" id="s-building-label">BUILDING 100</div>
       <div class="studio-nameplate character-name" id="s-clerk-label">Mika</div>
-      <div class="studio-nameplate" id="s-exit-label">E · exit</div>
+      <div class="studio-nameplate" id="s-exit-label">E · Exit</div><button class="lift-hotspot" id="s-lift-left" data-action="lift:0" aria-label="Use left lift · floor directory" hidden><span>Floor directory</span></button><button class="lift-hotspot" id="s-lift-right" data-action="lift:1" aria-label="Use right lift · floor directory" hidden><span>Floor directory</span></button>
       <div class="studio-nameplate accommodation-sign" id="s-accommodation-sign">STUDENT ACCOMMODATION</div>
       <div class="studio-nameplate wayfinding-sign" id="s-wayfinding">NOODLES →</div>
       <button class="studio-nameplate archive-board" id="s-archive-board" data-action="faculty-board" aria-label="Open professor archive" hidden><span aria-hidden="true">▤</span>Professor<br>archive</button>
@@ -320,9 +329,9 @@ export class StudioGame {
       <div class="class-overlay" id="s-class" hidden><span class="eyebrow" id="s-class-code">CLASS IN SESSION</span><h3 id="s-class-title">A little wiser, every day.</h3><p id="s-class-quote"></p><div class="stamina-track"><i id="s-class-fill"></i></div><p id="s-class-progress"></p></div>
       <footer class="studio-dock"><div class="weapon-dock" role="group" aria-label="Quick equipment slots">${[0,1,2].map(i=>`<button class="weapon-button empty-slot" data-action="quick-slot:${i}" id="quick-slot-${i}" aria-label="Empty slot ${i+1}"><kbd>${i+1}</kbd><img hidden alt=""><span class="empty-slot-mark">+</span></button>`).join('')}<button class="bag-button" data-action="backpack" aria-label="Open backpack">Bag</button></div>
       <button id="equipment-skill" class="equipment-skill" data-action="equipment-skill" hidden><kbd>R</kbd><span></span></button><div class="move-dock" id="s-move-dock" hidden><button data-action="move:uppercut" id="move-uppercut" title="K · Uppercut"><kbd>K</kbd>↥</button><button data-action="move:kick" id="move-kick" title="L · Jump kick"><kbd>L</kbd>↗</button><button data-action="move:dodge" id="move-dodge" title="Shift · Dodge"><kbd>⇧</kbd>»</button><button data-action="interact" id="move-grab" title="E · Pick up / throw"><kbd>E</kbd>↔</button></div>
-      <div class="studio-interaction"><button class="interact-button" id="s-interact" data-action="interact"><kbd class="key">E</kbd><span id="s-interact-text"></span></button><div class="studio-controls" id="s-controls">A D / ← → move &nbsp; W jump &nbsp; Space / click attack &nbsp; E interact &nbsp; M building</div></div>
-      </footer><nav class="touch-controls" aria-label="Touch game controls"><div class="touch-movement"><button data-touch="left" aria-label="Move left">◀</button><button data-touch="right" aria-label="Move right">▶</button><button data-touch="drop" aria-label="Drop through platform">↓</button></div><div class="touch-actions"><button data-touch="interact" id="touch-interact" aria-label="Interact or grab and throw">Talk</button><button data-touch="jump" aria-label="Jump">Jump</button><button data-touch="attack" id="touch-attack" aria-label="Attack">Hit</button></div></nav><aside class="journey-dock"><span class="eyebrow">Your semester</span><b id="s-journey"></b><span id="s-xp" style="font-size:10px"></span><div class="xp-track"><i id="s-xp-fill"></i></div><div id="s-knowledge-boxes"></div><small id="s-knowledge"></small><button class="calendar-button" data-action="semester" id="s-calendar">Semester calendar</button><button class="submit-study" data-action="submit-study" id="s-submit-study" hidden>Pass studio →</button></aside>
-      <div class="mika-speech" id="s-mika-speech" hidden>Oh, hey. Long studio day?<small>Find something for your next studio.</small></div><div class="studio-nameplate" id="s-restaurant-sign" hidden>LUCKY LANTERN NOODLES</div><div class="studio-nameplate" id="s-job-label" hidden></div><div class="studio-nameplate" id="s-laptop-label" hidden>Homework · +0.5 Knowledge</div><div id="s-modal-root"></div><div class="scene-transition" id="s-transition" hidden role="status" aria-live="polite"><div class="transition-panel"><span class="eyebrow" id="s-transition-kind"></span><span class="transition-symbol" aria-hidden="true">◇</span><h2 id="s-transition-title"></h2><p>One step closer.</p></div></div>`;
+      <div class="studio-interaction"><button class="interact-button" id="s-interact" data-action="interact"><kbd class="key">E</kbd><span id="s-interact-text"></span></button><div class="studio-controls" id="s-controls">A D / ← → move &nbsp; W jump &nbsp; Space / click attack &nbsp; E interact &nbsp; M lift nearby</div></div>
+      </footer><nav class="touch-controls" aria-label="Touch game controls"><div class="touch-movement"><button data-touch="left" aria-label="Move left">◀</button><button data-touch="right" aria-label="Move right">▶</button><button data-touch="drop" aria-label="Drop through platform">↓</button></div><div class="touch-actions"><button data-touch="interact" id="touch-interact" aria-label="Interact or grab and throw">Talk</button><button data-touch="jump" aria-label="Jump">Jump</button><button data-touch="attack" id="touch-attack" aria-label="Attack">Hit</button></div></nav><aside class="journey-dock" id="s-journey-panel"><span class="eyebrow">Your semester</span><b id="s-journey"></b><span id="s-xp" style="font-size:10px"></span><div class="xp-track"><i id="s-xp-fill"></i></div><div id="s-knowledge-boxes"></div><small id="s-knowledge"></small><button class="calendar-button" data-action="semester" id="s-calendar">Semester calendar</button><button class="submit-study" data-action="submit-study" id="s-submit-study" hidden>Pass studio →</button></aside>
+      <aside class="outdoor-day-card" id="s-day-card"><strong id="s-weekday"></strong><span id="s-semester-number"></span><small id="s-school-status"></small></aside><div class="mika-speech" id="s-mika-speech" hidden>Oh, hey. Long studio day?<small>Find something for your next studio.</small></div><div class="studio-nameplate" id="s-restaurant-sign" hidden>LUCKY LANTERN NOODLES</div><div class="studio-nameplate" id="s-job-label" hidden></div><div class="studio-nameplate" id="s-laptop-label" hidden>Homework · +0.5 Knowledge</div><div id="s-modal-root"></div><div class="scene-transition" id="s-transition" hidden role="status" aria-live="polite"><div class="transition-panel"><span class="eyebrow" id="s-transition-kind"></span><span class="transition-symbol" aria-hidden="true">◇</span><h2 id="s-transition-title"></h2><p>One step closer.</p></div></div>`;
   }
   private el(id: string): HTMLElement { return this.ui.querySelector<HTMLElement>(`#${id}`)!; }
   private label(id: string, value: string): void { const el = this.el(id); if (el.textContent !== value) el.textContent = value; }
@@ -345,30 +354,35 @@ export class StudioGame {
     this.fight = false; this.projectiles.clear(); this.enemyProjectiles.clear(); this.warning.visible = false; this.invulnerable = 0;
     this.effects.clear(); resetMotion(this.hero); resetMotion(this.boss); this.pendingAttack = null; this.hitStop = 0; this.attackBuffer = 0; this.chainWindow = 0; this.penChain = 0; this.cameraShake = 0;
     this.camera.position.set(0, 0, 20); this.heroFlash = 0; this.bossFlash = 0;
-    this.gymTraining=0; this.state.place = place; if(place==='studio')beginSemester(this.state); this.hero.x = place === 'studio' ? 12.3 : 14; this.hero.y = FLOOR; this.hero.hp = this.state.stamina;
+    this.gymTraining=0; this.state.place = place; if(place==='studio')beginSemester(this.state); this.hero.x = place === 'studio' ? 5.5 : 14; this.hero.y = FLOOR; this.hero.hp = this.state.stamina;
     this.instructorArt.setTeacher(this.currentTeacher());
     this.boss.x = 24; this.boss.y = FLOOR; this.boss.hp = 160;
     this.teaching.reset(this.currentTeacher().id); this.teachingFacing = -1; this.teachingGesture = 0;
     this.background.material.map = this.backgrounds.get(place)!; this.background.material.color.set('#ffffff'); this.background.material.needsUpdate = true;
-    this.background.scale.set(place==='lobby'?3:1,place==='lobby'?32/18:1,1); this.background.position.set(place==='lobby'?48:16,place==='lobby'?13.15:9,-10);
-    this.chair.visible = place === 'studio'; this.bossMesh.visible = place === 'studio'; this.bossShadow.visible = place === 'studio';
+    const layout=roomLayout(place);this.background.scale.set(layout.background.width/32,layout.background.height/18,1);this.background.position.set(layout.background.x,layout.background.y,-10);
+    this.restaurantCustomers.setVisible(place==='restaurant');this.classroomDoor.setVisible(place==='studio');
+    this.chair.visible = place === 'studio'; this.bossMesh.visible = place === 'studio'&&isSchoolDay(this.state); this.bossShadow.visible = this.bossMesh.visible;
     this.craftingTable.visible = place === 'tools';
     this.cashierMesh.visible=place==='restaurant';this.counterFront.visible=place==='restaurant';this.laptop.visible=place==='home';
     this.clerkMesh.visible = place === 'mystery'; this.clerkShadow.visible = place === 'mystery';
     if (place === 'mystery') this.hero.x = 8;
     if (place === 'restaurant') this.hero.x=7;
+    if(place==='home')this.hero.x=HOME_POINTS.spawn.x;
     if (place === 'skills' || place === 'tools') this.hero.x = 19;
     this.cameraBase = 0;
-    this.close(); this.positionActors(); if (save) this.persist(); this.refresh();
+    this.resize();this.close(); this.positionActors(); if (save) this.persist(); this.refresh();
   }
   private travel(place: Place, studio?: number, after: Modal = null): void {
     if (this.transition.active || this.fight || this.classElapsed !== null || this.sleepElapsed !== null || this.activityBusy) return;
+    if(['studio','skills','tools'].includes(place)&&!this.canUseLift()){this.toast('Choose your floor at a lift in the Building 100 lobby.');return;}
+    if(place==='studio'&&(!isSchoolDay(this.state)||!Number.isInteger(studio??this.state.studio)||(studio??this.state.studio)<1||(studio??this.state.studio)>unlockedStudio(this.state)))return;
     const from = this.state.place;
     const indoor = ['studio', 'foyer', 'skills', 'tools'];
-    const lift = indoor.includes(from) && indoor.includes(place);
+    const whiteDoor=from==='studio'&&place==='foyer';
+    const lift = !whiteDoor&&indoor.includes(from) && indoor.includes(place);
     const title = place === 'studio' ? `L${studio ?? this.state.studio} · Studio ${studio ?? this.state.studio} · ${STUDIO_NAMES[(studio ?? this.state.studio) - 1]}` : place === 'foyer' ? 'G · Building 100 Lobby' : place === 'mystery' ? 'The Other Cupboard' : place==='restaurant'?'Lucky Lantern Noodles': place === 'home' ? 'Your apartment' : place === 'skills' ? 'B1 · Student Gym' : place === 'tools' ? 'B2 · Model Workshop' : place === 'lobby' ? 'Back to the forecourt' : 'Everyday supplies';
     this.close(); this.input.releaseKeys();
-    const el = this.el('s-transition'); el.hidden = false; el.classList.toggle('lift-transition', lift); el.style.opacity = '0';
+    const el = this.el('s-transition'); el.hidden = false; el.classList.toggle('lift-transition', lift);el.classList.toggle('white-door-transition',whiteDoor); el.style.opacity = '0';
     this.label('s-transition-kind', lift ? 'TAKING THE LIFT' : 'THROUGH THE DOOR'); this.label('s-transition-title', title);
     this.ui.setAttribute('aria-busy', 'true');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -382,23 +396,34 @@ export class StudioGame {
   }
   private followCamera(dt: number, snap = false): void {
     const half = (this.camera.right - this.camera.left) / 2;
-    const worldWidth=this.state.place==='lobby'?96:32;
-    const desired = half<worldWidth/2 ? Math.max(half-16,Math.min(worldWidth-16-half,this.hero.x-16)) : 0;
+    const worldWidth=roomLayout(this.state.place).width,center=worldWidth/2;
+    const desired = half<worldWidth/2 ? Math.max(half-center,Math.min(worldWidth-center-half,this.hero.x-center)) : 0;
     this.cameraBase = snap ? desired : this.cameraBase + (desired - this.cameraBase) * (1 - Math.exp(-6 * dt));
     this.camera.position.x = this.cameraBase;
   }
-  private near(): 'chair' | 'instructor' | 'exit' | 'shop' | 'mystery' | 'clerk' | 'shopfloor' | 'building' | 'lobby' | 'home' | 'skills' | 'tools' | 'map' | 'workshopfloor' | 'faculty' | 'restaurant' | 'work' | 'jobfloor' | 'homework' {
+  private insideBuilding():boolean {return ['foyer','studio','skills','tools'].includes(this.state.place);}
+  private canUseLift(index?:number):boolean {
+    if(this.state.place!=='foyer'||Math.abs(this.hero.y-FLOOR)>.15||Math.abs(this.hero.vy)>.1)return false;
+    return index===undefined?LOBBY_LIFTS.some(x=>Math.abs(this.hero.x-x)<1.5):Number.isInteger(index)&&index>=0&&index<LOBBY_LIFTS.length&&Math.abs(this.hero.x-LOBBY_LIFTS[index])<1.5;
+  }
+  private exitRoom():void {if(this.state.place!=='lobby')this.travel(['studio','skills','tools'].includes(this.state.place)?'foyer':'lobby');}
+  private near(): 'chair' | 'instructor' | 'exit' | 'shop' | 'mystery' | 'clerk' | 'shopfloor' | 'building' | 'lobby' | 'home' | 'skills' | 'tools' | 'map' | 'workshopfloor' | 'faculty' | 'restaurant' | 'work' | 'jobfloor' | 'homework' | 'foyerfloor' | 'classroomfloor' | 'homefloor' {
     if (this.state.place === 'lobby') { if(Math.abs(this.hero.x-83)<3.5)return 'restaurant';if(Math.abs(this.hero.x-11)<3)return 'mystery';if(Math.abs(this.hero.x-65)<3)return 'home';if(Math.abs(this.hero.x-37)<3)return 'building';return 'lobby'; }
     if(this.state.place==='restaurant')return this.hero.x<5?'exit':Math.abs(this.hero.x-22)<4?'work':'jobfloor';
     if (this.state.place === 'mystery') { if (this.hero.x < 5.5) return 'exit'; if (Math.abs(this.hero.x - 24) < 3.5) return 'clerk'; return 'shopfloor'; }
-    if (this.state.place === 'foyer') return this.hero.x < 5 ? 'exit' : this.hero.x > 27 ? 'faculty' : 'map';
-    if (this.state.place === 'home') return this.hero.x < 4 ? 'exit' : this.hero.x>18?'homework':'home';
-    if (this.state.place === 'skills' || this.state.place === 'tools') return this.hero.x<5 ? 'map' : Math.abs(this.hero.x-22)<5 ? this.state.place : 'workshopfloor';
+    if (this.state.place === 'foyer') return this.hero.x < 5 ? 'exit' : this.hero.x > 27 ? 'faculty' : this.canUseLift()?'map':'foyerfloor';
+    if (this.state.place === 'home') {
+      const point=HOME_POINTS.homework.interact,bed=HOME_POINTS.sleep.bed;
+      if(this.hero.x<4)return 'exit';
+      if(Math.abs(this.hero.x-point.x)<point.radiusX&&Math.abs(this.hero.y-point.y)<point.radiusY)return 'homework';
+      return this.hero.x>=bed.x1-1.5&&this.hero.x<=bed.x2+1?'home':'homefloor';
+    }
+    if (this.state.place === 'skills' || this.state.place === 'tools') return this.hero.x<5 ? 'exit' : Math.abs(this.hero.x-22)<5 ? this.state.place : 'workshopfloor';
     if (this.state.place === 'studio') {
       const teacherDistance=Math.abs(this.hero.x-this.boss.x),chairDistance=Math.abs(this.hero.x-10);
-      if(teacherDistance<3 && Math.abs(this.hero.y-this.boss.y)<2.5 && teacherDistance<chairDistance)return 'instructor';
+      if(isSchoolDay(this.state)&&teacherDistance<3 && Math.abs(this.hero.y-this.boss.y)<2.5 && teacherDistance<chairDistance)return 'instructor';
       if(chairDistance<3)return 'chair';
-      return this.hero.x<5?'exit':'map';
+      return this.hero.x<5?'exit':'classroomfloor';
     }
     return this.state.place;
   }
@@ -451,8 +476,8 @@ export class StudioGame {
     if (action === 'interact') {
       if (this.fight || this.classroomPropAvailable()) { this.grabOrThrow(); return; }
       const near = this.near();
-      if (near === 'exit') { this.travel(this.state.place==='studio'?'foyer':'lobby'); return; }
-      if (near === 'home' && this.state.place !== 'home') { this.travel('home', undefined, 'home'); return; }
+      if (near === 'exit') { this.exitRoom(); return; }
+      if (near === 'home' && this.state.place !== 'home') { this.travel('home'); return; }
       if(near==='restaurant'){this.travel('restaurant');return;}
       if(near==='work'||near==='homework'){this.startDailyActivity(near);return;}
       if(near==='jobfloor'){this.toast('Walk to the cashier counter to work a shift.');return;}
@@ -463,9 +488,17 @@ export class StudioGame {
       if (near === 'shopfloor') { this.toast('Mika is by the counter on the right. Walk over and press E to chat.'); return; }
       if (near === 'workshopfloor') { this.toast(this.state.place==='skills'?'The training station is on the right. Walk over to exercise.':'The fabrication bench is on the right. Walk over to modify your weapon.'); return; }
       if(near==='chair'){this.startClass();return;}
+      if(near==='homefloor'){this.toast('Jump onto the chair to reach your laptop, or walk left to your bed.');return;}
+      if(near==='foyerfloor'){this.toast('Stand in front of either lift to choose a floor.');return;}
+      if(near==='classroomfloor'){this.toast('Exit through the door on the far left.');return;}
       this.open(near === 'instructor' ? 'instructor' : near); return;
     }
-    if (action === 'map') { if (['lobby', 'mystery', 'home','restaurant'].includes(this.state.place)) this.travel('foyer', undefined, 'map'); else this.open('map'); return; }
+    if(action==='exit-room'){this.exitRoom();return;}
+    if(action==='map'||action.startsWith('lift:')) {
+      const index=action==='map'?undefined:Number(action.slice(5));
+      if(!this.canUseLift(index)){this.toast('Stand in front of a lift in the Building 100 lobby to choose a floor.');return;}
+      this.open('map');return;
+    }
     if (action === 'faculty-board') { if(this.state.place==='foyer'&&!this.modal)this.open('faculty'); return; }
     if (action === 'faculty') { this.open('faculty'); return; }
     if (action.startsWith('professor:')) {
@@ -473,22 +506,22 @@ export class StudioGame {
       if (!this.state.cleared.every(Boolean) || !TEACHERS.some(t=>t.id===id)) return;
       this.selectedProfessor = id;
       if(this.state.place==='studio' && this.state.studio===9) { this.instructorArt.setTeacher(this.currentTeacher()); this.open('exhibition'); this.refresh(); }
-      else this.travel('studio',9,'exhibition');
+      else {this.close();this.toast('Professor selected. Take the lobby lift to L9 for your exhibition duel.',6);}
       return;
     }
     if (action === 'exhibition-fight') { this.startFight(true); return; }
-    if (action.startsWith('travel:')) { const place = action.split(':')[1] as Place; if (!(place in PLACES)) return; if(place===this.state.place){this.close();return;} this.travel(place); return; }
+    if (action.startsWith('travel:')) { const place = action.split(':')[1] as Place; if (!(place in PLACES)) return; if(['studio','skills','tools'].includes(place)&&(this.modal!=='map'||!this.canUseLift()))return; if(place===this.state.place){this.close();return;} this.travel(place); return; }
     if (action.startsWith('floor:')) {
-      const studio = Number(action.split(':')[1]); if (studio < 1 || studio > unlockedStudio(this.state)) return;
-      this.selectedProfessor = null;
+      const studio = Number(action.split(':')[1]); if(this.modal!=='map'||!this.canUseLift()||!isSchoolDay(this.state)||!Number.isInteger(studio)||studio<1||studio>unlockedStudio(this.state))return;
+      if(studio!==9)this.selectedProfessor = null;
       this.instructorArt.setTeacher(teacherById(this.state.teacherAssignments[studio-1]));
-      if (this.state.place === 'studio' && this.state.studio === studio) this.close(); else this.travel('studio', studio); return;
+      if (this.state.place === 'studio' && this.state.studio === studio) this.close(); else this.travel('studio', studio,studio===9&&this.selectedProfessor?'exhibition':null); return;
     }
     if (action === 'class') { this.startClass(); return; }
     if (action === 'fight') { this.startFight(); return; }
     if(action==='sleep') {
       if(this.state.place!=='home')return;
-      this.close();resetMotion(this.hero);this.hero.x=9;this.hero.y=FLOOR;this.sleepElapsed=0;
+      this.close();resetMotion(this.hero);this.hero.x=HOME_POINTS.sleep.approach.x;this.hero.y=FLOOR;this.sleepElapsed=0;
       this.dailyVisuals.startSleep(this.state.appearance,this.backgrounds.get('home'));
       this.input.releaseKeys();this.touchPointers.clear();this.touchActions.clear();this.followCamera(1,true);this.positionActors();this.positionLabels();this.refresh();return;
     }
@@ -541,6 +574,7 @@ export class StudioGame {
   private open(modal: Modal): void {
     this.input?.cancelCapture();
     if (!modal || this.transition.active) return;
+    if(modal==='map'&&!this.canUseLift()){this.toast('Stand in front of a lift in the Building 100 lobby to choose a floor.');return;}
     if (this.classElapsed !== null || this.sleepElapsed !== null || this.activityBusy) { if (modal !== 'pause') return; }
     const settingsFocus=modal==='pause'&&this.modal==='pause'?(document.activeElement as HTMLElement)?.dataset.action:undefined;
     const preserveCreator=modal==='character'&&this.modal==='character';
@@ -570,16 +604,16 @@ export class StudioGame {
       body = `<div class="teacher-intro"><img src="${this.portrait(teacher)}" alt="${teacher.name}"><div><h3>${teacher.name}</h3><p>${teacher.project}</p><p>${modal==='exhibition-won'?'Victory recorded in your professor archive. Your completed semester stays complete.':`A friendly final challenge with exaggerated ${WEAPONS[teacher.tool].name.toLowerCase()} attacks. Your Knowledge and completed studios stay safe if you lose.`}</p></div></div><div class="choice">${modal==='exhibition' ? `<p>${s.stamina}/${maxStamina(s)} stamina · Exhibition wins award collection badges, not extra coins or XP.</p><button class="rust" data-action="exhibition-fight" ${s.stamina<=0?'disabled':''}>Start exhibition duel →</button>${s.stamina<=0?'<button data-action="travel:home">Rest at home first →</button>':''}`:''}<button class="primary" data-action="faculty">Choose another professor →</button></div>`;
     } else if (modal === 'map') {
       title = 'Your way through 100.'; eyebrow = 'BUILDING DIRECTORY';
-      body = `<p>G is the lobby. Studios 1–9 are on L1–L9. Visit B1 to train or B2 to upgrade equipment.</p><div class="floor-list">${STUDIO_NAMES.map((name, index) => {
-        const n = index + 1, open = n <= unlockedStudio(s);
-        return `<button class="floor-row ${n === s.studio && s.place === 'studio' ? 'current' : ''}" data-action="floor:${n}" ${open ? '' : 'disabled'}><span><span class="floor-code">${'L' + n}</span><strong>Studio ${n} · ${name}</strong></span><small>${s.cleared[index] ? '✓ ' + (s.cleared[index] === 'study' ? 'Knowledge' : 'Instructor') : open ? s.knowledge[index] + '/' + KNOWLEDGE_REQUIRED + ' Knowledge →' : 'Locked'}</small></button>`;
+      body = `<p>${isSchoolDay(s)?"Choose a floor. Classes run Monday–Friday.":"Classes are closed for the weekend. The gym and workshop remain open."}</p><div class="floor-list">${STUDIO_NAMES.map((name, index) => {
+        const n = index + 1, open = n <= unlockedStudio(s)&&isSchoolDay(s);
+        return `<button class="floor-row ${n === s.studio && s.place === 'studio' ? 'current' : ''}" data-action="floor:${n}" ${open ? '' : 'disabled'}><span><span class="floor-code">${'L' + n}</span><strong>Enter Studio ${n} · ${name}</strong></span><small>${!isSchoolDay(s)?'Closed · weekend':s.cleared[index] ? '✓ ' + (s.cleared[index] === 'study' ? 'Knowledge' : 'Instructor') : open ? s.knowledge[index] + '/' + KNOWLEDGE_REQUIRED + ' Knowledge →' : 'Locked'}</small></button>`;
       }).reverse().join('')}<button class="floor-row ${s.place==='foyer'?'current':''}" data-action="travel:foyer"><span><span class="floor-code">G</span><strong>Building 100 Lobby</strong></span></button><div class="workshop-heading">✦ UPGRADE WORKSHOPS · OPEN TO ALL STUDENTS</div><button class="floor-row upgrade-row" data-action="travel:skills"><span><span class="floor-code">B1</span><strong>Student Gym</strong></span><small>✦ Stamina & strength →</small></button><button class="floor-row upgrade-row" data-action="travel:tools"><span><span class="floor-code">B2</span><strong>Model Workshop</strong></span><small>✦ Tool upgrades →</small></button></div>`;
     } else if (modal === 'instructor') {
       eyebrow = `STUDIO ${s.studio} · ${teacher.name.toUpperCase()}`; title = cleared ? 'A well-earned next step.' : 'Feeling confident?';
-      body = `<div class="teacher-intro"><img src="${this.portrait(teacher)}" alt="${teacher.name}"><div><h3>${teacher.name}</h3><p>${teacher.project}</p></div></div>` + (cleared ? `<p>“You have earned your place upstairs. Keep going.”</p><div class="choice"><button class="primary" data-action="${s.studio===9?'faculty':'map'}">${s.studio===9?'Choose an exhibition professor →':'Open the building directory →'}</button></div>` : `<p>“${PASS_KNOWLEDGE} Knowledge will get you through my studio. Reach ${KNOWLEDGE_REQUIRED} for an HD grade. Or you can challenge my oversized ${WEAPONS[teacher.tool].name.toLowerCase()}.”</p><div class="choice"><h3>Challenge the instructor</h3><p>Win to pass immediately. Jump onto desks and hanging lights; S drops through. E grabs or throws loose cups and rulers. K uppercuts, L jump-kicks and Shift dodges. Space or click ${s.weaponEquipped?'attacks with your '+WEAPONS[s.weapon].name.toLowerCase():'punches'}. R uses your equipment skill.</p><p class="detail">${s.stamina}/${maxStamina(s)} stamina</p><button class="rust" data-action="fight" ${s.stamina<=0?'disabled':''}>Challenge ${teacher.name} →</button></div><p>Your Knowledge stays safe if you lose. You can always return to class.</p>${s.stamina<=0?'<button data-action="travel:home">Rest at home first →</button>':''}`);
+      body = `<div class="teacher-intro"><img src="${this.portrait(teacher)}" alt="${teacher.name}"><div><h3>${teacher.name}</h3><p>${teacher.project}</p></div></div>` + (cleared ? `<p>“You have earned your place upstairs. Keep going.”</p><div class="choice"><button class="primary" data-action="exit-room">Exit to the lobby →</button></div>` : `<p>“${PASS_KNOWLEDGE} Knowledge will get you through my studio. Reach ${KNOWLEDGE_REQUIRED} for an HD grade. Or you can challenge my oversized ${WEAPONS[teacher.tool].name.toLowerCase()}.”</p><div class="choice"><h3>Challenge the instructor</h3><p>Win to pass immediately. Jump onto desks and hanging lights; S drops through. E grabs or throws loose cups and rulers. K uppercuts, L jump-kicks and Shift dodges. Space or click ${s.weaponEquipped?'attacks with your '+WEAPONS[s.weapon].name.toLowerCase():'punches'}. R uses your equipment skill.</p><p class="detail">${s.stamina}/${maxStamina(s)} stamina</p><button class="rust" data-action="fight" ${s.stamina<=0?'disabled':''}>Challenge ${teacher.name} →</button></div><p>Your Knowledge stays safe if you lose. You can always return to class.</p>${s.stamina<=0?'<button data-action="travel:home">Rest at home first →</button>':''}`);
     } else if (modal === 'home') {
       eyebrow = 'YOUR ROOM'; title = 'Tomorrow is another idea.';
-      body = `<p>Your own little apartment, right next to Building 100. Leave your drawing tube by the door. Put the kettle on.</p><div class="choice"><h3>A good night’s sleep</h3><p>Restore all stamina. Keep every bit of Knowledge, equipment and progress.</p><button class="primary" data-action="sleep">Sleep & restore · Day ${s.day + 1} →</button></div><button data-action="travel:lobby">Step outside to campus ←</button>`;
+      body = `<p>Your own little apartment, right next to Building 100. Leave your drawing tube by the door. Put the kettle on.</p><div class="choice"><h3>A good night’s sleep</h3><p>Restore all stamina. Keep every bit of Knowledge, equipment and progress.</p><button class="primary" data-action="sleep">Sleep & restore · Day ${s.day + 1} →</button></div><button data-action="travel:lobby">Exit apartment ←</button>`;
     } else if (modal === 'skills' || modal === 'tools') {
       const kinds: Upgrade[] = modal === 'skills' ? ['endurance', 'strength'] : modal === 'tools' ? ['tool'] : ['shoes', 'snack'];
       eyebrow = modal === 'skills' ? 'B1 · STUDENT GYM' : modal === 'tools' ? 'B2 · MODEL WORKSHOP' : 'MIKA · EVERYDAY SUPPLIES';
@@ -594,10 +628,10 @@ export class StudioGame {
       }).join('')}${modal === 'tools' ? '<p>Equip a different tool before entering the workshop to upgrade it.</p>' : ''}`;
     } else if (modal === 'passed') {
       const last = s.studio === 9; eyebrow = last ? 'SEMESTER COMPLETE' : `STUDIO ${s.studio} COMPLETE`; title = last ? 'You found your own way.' : 'A little higher. A little wiser.';
-      body = `<p>${last ? 'Nine studios later, your work joins the final exhibition. You arrived with a sketchbook. You leave with a story of your own.' : `You passed ${STUDIO_NAMES[i]} through ${cleared === 'study' ? 'Knowledge' : 'an instructor victory'}. The next studio is now open.`}</p><div class="choice"><h3>${last ? 'Welcome to the exhibition.' : `Studio ${s.studio + 1} is waiting.`}</h3><p>+${65 + s.studio * 5} XP${cleared==='study'&&s.knowledge[i]>=KNOWLEDGE_REQUIRED?' · HD grade · +'+HD_REWARD+' coins':''} · Progress saved</p><button class="primary" data-action="${last ? 'faculty' : 'floor:' + (s.studio + 1)}">${last ? 'Choose an exhibition professor →' : 'Head upstairs →'}</button></div><p>Your Knowledge, tools and upgrades come with you.</p>`;
+      body = `<p>${last ? 'Nine studios later, your work joins the final exhibition. You arrived with a sketchbook. You leave with a story of your own.' : `You passed ${STUDIO_NAMES[i]} through ${cleared === 'study' ? 'Knowledge' : 'an instructor victory'}. The next studio is now open.`}</p><div class="choice"><h3>${last ? 'Welcome to the exhibition.' : `Studio ${s.studio + 1} is waiting.`}</h3><p>+${65 + s.studio * 5} XP${cleared==='study'&&s.knowledge[i]>=KNOWLEDGE_REQUIRED?' · HD grade · +'+HD_REWARD+' coins':''} · Progress saved</p><button class="primary" data-action="exit-room">Exit to the lobby →</button></div><p>Your Knowledge, tools and upgrades come with you.</p>`;
     } else {
       eyebrow = 'FIGHT YOUR WAY TO ARCHITECTURE'; title = 'Game menu';
-      body = `<p>Move with A/D or the arrow keys. W jumps; S drops through classroom furniture. Space or clicking the scene attacks. In fights, E grabs/throws, K uppercuts, L jump-kicks and Shift dodges. Outside fights, E interacts. 1, 2, 3 select quick slots; R uses equipment; I opens your backpack; M opens the building.</p><div class="choice"><button class="primary" data-action="close">Resume →</button>${this.fight ? '<button data-action="retreat">Leave fight & go home</button>' : this.classElapsed === null && this.sleepElapsed === null ? '<button data-action="map">Building directory</button>' : ''}</div><p>${this.saveFailed ? 'Saving is unavailable in this browser.' : 'Your completed progress is saved automatically.'} Classes and sleeping pause with the game.</p><footer><a href="?mode=farm">Open the original farming game ↗</a></footer>`;
+      body = `<p>Move with A/D or the arrow keys. W jumps; S drops through classroom furniture. Space or clicking the scene attacks. In fights, E grabs/throws, K uppercuts, L jump-kicks and Shift dodges. Outside fights, E interacts. 1, 2, 3 select quick slots; R uses equipment; I opens your backpack; M opens the directory while you stand at a lobby lift.</p><div class="choice"><button class="primary" data-action="close">Resume →</button>${this.fight ? '<button data-action="retreat">Leave fight & go home</button>' : this.classElapsed === null && this.sleepElapsed === null ? '<button data-action="map">Building directory</button>' : ''}</div><p>${this.saveFailed ? 'Saving is unavailable in this browser.' : 'Your completed progress is saved automatically.'} Classes and sleeping pause with the game.</p><footer><a href="?mode=farm">Open the original farming game ↗</a></footer>`;
     }
     if(modal==='map') body = `<button class="archive-link" data-action="faculty">Professor archive · ${s.professorWins.length}/33 exhibition wins ↗</button>`+body;
     if(modal==='pause') {
@@ -686,14 +720,14 @@ export class StudioGame {
   private startDailyActivity(kind:'work'|'homework'):void {
     if(this.modal||this.transition.active||this.fight||this.classElapsed!==null||this.sleepElapsed!==null||this.activityBusy)return;
     const work=kind==='work';
-    if(this.state.place!==(work?'restaurant':'home')||this.near()!==kind||Math.abs(this.hero.y-FLOOR)>.15)return;
+    if(this.state.place!==(work?'restaurant':'home')||this.near()!==kind||!standingOn(this.hero,placePlatforms(this.state.place)))return;
     if(this.state.activities.filter(a=>a.day===this.state.day).length>=2){this.toast('Two activities done. Sleep at home to begin tomorrow.');return;}
     if(!work&&(this.state.cleared[this.state.studio-1]||hasActivity(this.state,'homework'))){this.toast('Homework is finished. Rest, or choose your next studio.');return;}
     const cost=work?workCost(this.state):homeworkCost(this.state);
     if(this.state.stamina<cost){this.toast('Not enough stamina. Sleep at home first.');return;}
     this.activityStartX=this.hero.x;resetMotion(this.hero);this.arena.drop('hero',this.hero);
     this.input.releaseKeys();this.touchPointers.clear();this.touchActions.clear();
-    if(work)this.workElapsed=0;else {this.homeworkElapsed=0;this.hero.x=25;}
+    if(work)this.workElapsed=0;else {this.homeworkElapsed=0;this.hero.x=HOME_POINTS.homework.seat.x;}
     this.el('s-class').classList.add('is-studying');this.paintTimer=0;this.refresh();
     this.updateDailyActivity(0);
   }
@@ -712,10 +746,10 @@ export class StudioGame {
       this.workElapsed=elapsed;const hop=Math.min(1,elapsed/.6),ease=hop*hop*(3-2*hop);
       this.hero.x=this.activityStartX+(22-this.activityStartX)*ease;
       this.hero.y=FLOOR+(8.8-FLOOR)*ease+Math.sin(hop*Math.PI)*2;
-    }else{this.homeworkElapsed=elapsed;this.hero.x=20.5;this.hero.y=6.55;this.facing=1;}
+    }else{this.homeworkElapsed=elapsed;this.hero.x=HOME_POINTS.homework.seat.x;this.hero.y=HOME_POINTS.homework.seat.y;this.facing=1;}
     this.studentArt.paint(this.time,false,this.state.weapon,work?(.1+Math.sin(this.time*5)*.08):0,!work,null,true,!work);
     this.cashierArt.paint(this.time+2,false,'pen',Math.sin(this.time*3)*.06,false,null,true);
-    this.positionActors();if(work&&elapsed<.6)this.heroMesh.position.z=4;
+    this.positionActors();if(work&&elapsed<.6)this.heroMesh.position.z=6;
     this.playerShadow.visible=!work;this.followCamera(dt);this.positionLabels();
     const remaining=Math.max(0,Math.ceil(seconds-elapsed));
     this.label('s-class-code',work?'SHIFT IN PROGRESS':'HOMEWORK IN PROGRESS');
@@ -734,7 +768,8 @@ export class StudioGame {
   }
   private startClass(): void {
     if(this.transition.active || this.fight || this.classElapsed!==null || this.sleepElapsed!==null || this.state.place!=='studio')return;
-    if(this.state.cleared[this.state.studio-1]){this.toast('Studio complete. Choose your next floor.');return;}
+    if(!isSchoolDay(this.state)){this.toast('Classes are closed on weekends. Return on Monday.');return;}
+    if(this.state.cleared[this.state.studio-1]){this.toast('Studio complete. Exit to the lobby to choose your next floor.');return;}
     if(hasActivity(this.state,'class')){this.toast('Class is finished for today. Try work or homework, then rest.');return;}
     if(this.state.activities.filter(a=>a.day===this.state.day).length>=2){this.toast('Your day is full. Sleep to begin tomorrow.');return;}
     if(Math.abs(this.hero.x-10)>=3 || Math.abs(this.hero.y-FLOOR)>.15){this.toast('Stand beside the classroom chair to take a seat.');return;}
@@ -790,7 +825,7 @@ export class StudioGame {
     return true;
   }
   private canStartFight(exhibition = false): boolean {
-    if(this.fight || this.state.place!=='studio' || this.state.stamina<=0 || this.transition.active || this.classElapsed!==null || this.sleepElapsed!==null)return false;
+    if(!isSchoolDay(this.state)||this.fight || this.state.place!=='studio' || this.state.stamina<=0 || this.transition.active || this.classElapsed!==null || this.sleepElapsed!==null)return false;
     return exhibition ? this.state.studio===9 && this.state.cleared.every(Boolean) && !!this.selectedProfessor : !this.state.cleared[this.state.studio-1];
   }
   private startFight(exhibition = false, inPlace = false): void {
@@ -946,6 +981,8 @@ export class StudioGame {
     if (this.toastUntil < this.time) this.label('s-toast', '');
     if (this.modal || document.hidden) { this.input.clearQueues(); this.camera.position.set(this.cameraBase, 0, 20); this.positionLabels(); return; }
     this.gymTraining=Math.max(0,this.gymTraining-dt);
+    if(this.state.place==='restaurant')this.restaurantCustomers.update(this.time);
+    if(this.state.place==='studio')this.classroomDoor.update(this.time);
     this.effects.update(dt); this.cameraShake = Math.max(0, this.cameraShake - dt * 4);
     this.camera.position.x = this.cameraBase + Math.sin(this.time * 88) * this.cameraShake * .13;
     this.camera.position.y = Math.cos(this.time * 103) * this.cameraShake * .08;
@@ -959,7 +996,7 @@ export class StudioGame {
       this.sleepElapsed+=dt;this.dailyVisuals.updateSleep(this.sleepElapsed/2.5,this.time);this.heroMesh.visible=false;this.playerShadow.visible=false;
       this.label('s-class-title', 'A fresh start is on its way.'); this.label('s-class-quote', 'Sketchbooks closed. Stamina recharging.'); this.label('s-class-code', 'A GOOD NIGHT’S SLEEP');
       this.el('s-class-fill').style.width = `${this.sleepElapsed / 2.5 * 100}%`; this.label('s-class-progress', 'Z z z …');this.el('s-class').removeAttribute('title');this.el('s-class-fill').removeAttribute('role');
-      if (this.sleepElapsed >= 2.5) { this.sleepElapsed=null;this.dailyVisuals.endSleep();this.hero.x=10;this.hero.y=FLOOR;this.positionActors();rest(this.state); this.hero.hp = this.state.stamina; this.persist(); this.refresh(); this.toast(`Morning, day ${this.state.day}. Stamina fully restored.`); }
+      if (this.sleepElapsed >= 2.5) { this.sleepElapsed=null;this.dailyVisuals.endSleep();this.hero.x=HOME_POINTS.sleep.wake.x;this.hero.y=FLOOR;this.positionActors();rest(this.state); this.hero.hp = this.state.stamina; this.persist(); this.refresh(); this.toast(`Morning, day ${this.state.day}. Stamina fully restored.`); }
       this.input.clearQueues(); return;
     }
     if(this.updateDailyActivity(dt)||this.updateClass(dt))return;
@@ -969,11 +1006,11 @@ export class StudioGame {
     const touchAxis=Math.sign([...this.touchPointers.values()].reduce((a,b)=>a+b,0));
     const axis = touchAxis || this.input.moveAxis;
     if (axis && this.hero.stun <= 0) this.facing = axis;
-    const platforms=this.state.place==='studio'?CLASSROOM_PLATFORMS:[];
+    const platforms=placePlatforms(this.state.place);
     if(standingOn(this.hero,platforms))this.heroCoyote=.1;else this.heroCoyote=Math.max(0,this.heroCoyote-dt);
     this.jumpBuffer=Math.max(0,this.jumpBuffer-dt);if(this.input.consumeJump()||this.touchActions.delete('jump'))this.jumpBuffer=.13;
     if(this.jumpBuffer>0&&this.heroCoyote>0&&this.hero.stun<=0){this.hero.vy=platforms.length?15.6:10;this.jumpBuffer=0;this.heroCoyote=0;this.effects.dust(this.hero.x,this.hero.y,.9);}
-    if((this.input.consumeAction('stats')||this.touchActions.delete('drop'))&&this.state.place==='studio'&&this.hero.y>FLOOR+.1){this.heroDrop=.25;this.hero.y-=.08;this.hero.vy=-3;}
+    if((this.input.consumeAction('stats')||this.touchActions.delete('drop'))&&platforms.length>0&&this.hero.y>FLOOR+.1){this.heroDrop=.12;this.hero.y-=.08;this.hero.vy=-3;}
     if(this.input.consumeAction('skill1'))this.physicalMove('uppercut');
     if(this.input.consumeAction('skill2'))this.physicalMove('kick');
     if(this.input.consumeAction('skill3'))this.physicalMove('dodge');
@@ -984,7 +1021,7 @@ export class StudioGame {
     this.comboTime=Math.max(0,this.comboTime-dt);if(!this.comboTime)this.comboHits=0;
     const speed = (this.state.shoes ? 7.8 : 6.8) * (1 + this.state.endurance * .04) * (this.pendingAttack?.weapon === 'ruler' ? .5 : 1);
     const previousX = this.hero.x;
-    if (stepMotion(this.hero, axis, speed, dt, this.state.place === 'lobby' ? 94 : 30,platforms,this.heroDrop>0)) this.effects.dust(this.hero.x,this.hero.y,1.3);
+    if (stepMotion(this.hero, axis, speed, dt, roomLayout(this.state.place).rightBoundary,platforms,this.heroDrop>0)) this.effects.dust(this.hero.x,this.hero.y,1.3);
     if (this.state.place === 'mystery' && this.hero.y < FLOOR + 2 && Math.abs(this.hero.x - 24) < 2.3) {
       this.hero.x = previousX <= 24 ? 21.7 : 26.3; this.hero.vx = 0;
     }
@@ -1022,6 +1059,7 @@ export class StudioGame {
     this.saveTimer += dt; if (this.saveTimer > 3) { this.persist(); this.saveTimer = 0; }
   }
   private updateTeaching(dt: number): void {
+    if(!isSchoolDay(this.state))return;
     const intent=this.teaching.update(dt,this.boss,this.hero);
     this.teachingFacing=intent.facing;this.teachingGesture=intent.gesture;
     stepMotion(this.boss,intent.axis,1.65,dt,30,CLASSROOM_PLATFORMS);
@@ -1064,7 +1102,7 @@ export class StudioGame {
 
   private positionActors(): void {
     const heroScale=this.state.place==='lobby'?LOBBY_STUDENT_SCALE:1;
-    this.heroMesh.position.set(this.hero.x, this.hero.y + 2.025*heroScale, 2);
+    this.heroMesh.position.set(this.hero.x, this.hero.y + 2.025*heroScale, this.state.place==='restaurant'&&this.workElapsed===null?6:2);
     this.playerShadow.visible=this.workElapsed===null;
     this.heroMesh.scale.set(this.facing * heroScale * (this.heroFlash ? 1.08 : 1), heroScale * (this.heroFlash ? .94 : 1), 1);
     this.heroMesh.rotation.z = this.hero.stun > 0 ? -Math.sign(this.hero.hitVx) * .22 : this.specialPose==='kick'?-this.facing*.17:0;
@@ -1076,7 +1114,7 @@ export class StudioGame {
     this.bossMesh.rotation.z = this.boss.stun > 0 ? -Math.sign(this.boss.hitVx) * .2 : this.bossPose==='kick'?-.15:0;
     (this.bossMesh.material as THREE.MeshBasicMaterial).color.set(this.bossFlash ? '#ffd7a0' : '#ffffff');
     this.playerShadow.position.x = this.hero.x; this.bossShadow.position.x = this.boss.x;
-    const support=(x:number,y:number)=>this.state.place==='studio'?Math.max(FLOOR,...CLASSROOM_PLATFORMS.filter(p=>x>=p.x1&&x<=p.x2&&p.y<=y+.1).map(p=>p.y)):FLOOR;
+    const support=(x:number,y:number)=>Math.max(FLOOR,...placePlatforms(this.state.place).filter(p=>x>=p.x1&&x<=p.x2&&p.y<=y+.1).map(p=>p.y));
     this.playerShadow.position.y=support(this.hero.x,this.hero.y)+.05;this.bossShadow.position.y=support(this.boss.x,this.boss.y)+.05;
     this.playerShadow.scale.x = heroScale * Math.max(.5, 1 - (this.hero.y - FLOOR) * .12); this.bossShadow.scale.x = Math.max(.5, 1 - (this.boss.y - FLOOR) * .12);
   }
@@ -1090,14 +1128,20 @@ export class StudioGame {
       's-archive-board': place === 'foyer' && !this.modal && !this.transition.active,
       's-crafting-label': (place === 'tools' || place === 'skills') && !this.modal,
       's-chair-label': place === 'studio' && !this.fight && this.classElapsed === null,
-      's-boss-label': place === 'studio' && !this.fight && this.classElapsed === null,
+      's-boss-label': place === 'studio' && isSchoolDay(this.state) && !this.fight && this.classElapsed === null,
       's-mystery-label': place === 'lobby', 's-building-label': place === 'lobby',
-      's-clerk-label': place === 'mystery', 's-exit-label': place === 'mystery' || place === 'foyer' || place==='home'||place==='restaurant',
+      's-clerk-label': place === 'mystery', 's-exit-label': place!=='lobby'&&!this.modal&&!this.fight&&!this.activityBusy&&this.sleepElapsed===null,
       's-accommodation-sign': place === 'lobby', 's-wayfinding': place === 'lobby',
-      's-context-hint': !this.activityBusy && !this.modal && !this.transition.active && (this.fight || this.classroomPropAvailable() ? !!this.arena.held('hero') || !!this.arena.nearby(this.hero) : this.classElapsed===null && this.sleepElapsed===null && !['lobby','shopfloor','workshopfloor','skills','tools','exit','clerk','faculty','work','homework','jobfloor'].includes(this.near())),
+      's-context-hint': !this.activityBusy && !this.modal && !this.transition.active && (this.fight || this.classroomPropAvailable() ? !!this.arena.held('hero') || !!this.arena.nearby(this.hero) : this.classElapsed===null && this.sleepElapsed===null && !['lobby','shopfloor','workshopfloor','skills','tools','exit','clerk','faculty','work','homework','jobfloor','foyerfloor','classroomfloor','homefloor','map'].includes(this.near())),
     };
     this.camera.updateMatrixWorld();
-    for (const [id, x, y] of [['s-mika-speech',24,10.6],['s-restaurant-sign',83,10.8],['s-job-label',22,8.8],['s-laptop-label',22.4,11.2],['s-archive-board',29.38,9.7],['s-crafting-label',22,FLOOR+4.8],['s-chair-label', 10, FLOOR + 2.4], ['s-boss-label', this.boss.x, this.boss.y - .22], ['s-mystery-label',11,FLOOR+4.5],['s-building-label',37,FLOOR+4.5], ['s-clerk-label', 24, FLOOR - .22], ['s-exit-label', 3.2, FLOOR + 3.1], ['s-accommodation-sign',65,11.1],['s-wayfinding',75,FLOOR+3], ['s-context-hint',this.hero.x,this.hero.y+4.8*(place==='lobby'?LOBBY_STUDENT_SCALE:1)]] as const) {
+    for(const [index,id] of ['s-lift-left','s-lift-right'].entries()) {
+      const x=LOBBY_LIFTS[index],left=new THREE.Vector3(x-1.15,11.8,0).project(this.camera),right=new THREE.Vector3(x+1.15,5.1,0).project(this.camera),el=this.el(id);
+      el.hidden=place!=='foyer'||!!this.modal||this.transition.active||left.x>1||right.x< -1;
+      el.style.left=((left.x+1)*50)+'%';el.style.top=((1-left.y)*50)+'%';el.style.width=((right.x-left.x)*50)+'%';el.style.height=((left.y-right.y)*50)+'%';
+      el.classList.toggle('is-near',this.canUseLift(index));
+    }
+    for (const [id, x, y] of [['s-mika-speech',24,10.6],['s-restaurant-sign',83,10.8],['s-job-label',22,8.8],['s-laptop-label',HOME_POINTS.homework.label.x,HOME_POINTS.homework.label.y],['s-archive-board',29.38,9.7],['s-crafting-label',22,FLOOR+4.8],['s-chair-label', 10, FLOOR + 2.4], ['s-boss-label', this.boss.x, this.boss.y - .22], ['s-mystery-label',11,FLOOR+4.5],['s-building-label',37,FLOOR+4.5], ['s-clerk-label', 24, FLOOR - .22], ['s-exit-label',place==='home'?HOME_POINTS.exit.x:place==='studio'?2.9:3.2,place==='home'?HOME_POINTS.exit.y:place==='studio'?9.1:FLOOR+3.1], ['s-accommodation-sign',65,11.1],['s-wayfinding',75,FLOOR+3], ['s-context-hint',this.hero.x,this.hero.y+4.8*(place==='lobby'?LOBBY_STUDENT_SCALE:1)]] as const) {
       const p = new THREE.Vector3(x, y, 0).project(this.camera); const el = this.el(id);
       el.style.left = `${(p.x + 1) * 50}%`; el.style.top = `${(1 - p.y) * 50}%`;
       el.hidden = !visibility[id] || p.x < -1.1 || p.x > 1.1;
@@ -1109,11 +1153,13 @@ export class StudioGame {
     const s = this.state, i = s.studio - 1, total = s.cleared.filter(Boolean).length;
     this.label('s-crafting-label', s.place==='skills' ? this.near()==='skills'?'E · Train':'Training station →' : this.near()==='tools'?'E · Modify weapon':'Fabrication bench →');
     this.el('touch-attack').hidden=!this.fight && !(s.place==='studio' && this.classElapsed===null && this.sleepElapsed===null);
-    this.label('touch-interact',this.activityBusy?'Working':this.near()==='work'?'Work':this.near()==='homework'?'Study':this.fight || this.classroomPropAvailable()?(this.arena.held('hero')?'Throw':'Grab'):this.near()==='home'&&s.place==='home'?'Rest':this.near()==='faculty'?'Archive':this.near()==='skills'?'Train':this.near()==='tools'?'Upgrade':this.near()==='chair'?'Sit':['instructor','clerk'].includes(this.near())?'Talk':'Enter');
+    this.label('touch-interact',this.activityBusy?'Working':this.near()==='work'?'Work':this.near()==='homework'?'Study':this.fight || this.classroomPropAvailable()?(this.arena.held('hero')?'Throw':'Grab'):this.near()==='exit'?'Exit':this.near()==='map'?'Lift':['foyerfloor','classroomfloor','homefloor','workshopfloor','jobfloor','shopfloor','lobby'].includes(this.near())?'Action':this.near()==='home'&&s.place==='home'?'Rest':this.near()==='faculty'?'Archive':this.near()==='skills'?'Train':this.near()==='tools'?'Upgrade':this.near()==='chair'?'Sit':['instructor','clerk'].includes(this.near())?'Talk':'Enter');
     this.label('s-level', `LV ${s.level} · ${window.innerWidth < 1000 ? 'Student' : 'Architecture student'}`); this.label('s-stamina', `${s.stamina} / ${maxStamina(s)}`);
     this.el('s-fill').style.width = `${s.stamina / maxStamina(s) * 100}%`; this.el('s-meter').setAttribute('aria-valuenow', String(s.stamina)); this.el('s-meter').setAttribute('aria-valuemin', '0'); this.el('s-meter').setAttribute('aria-valuemax', String(maxStamina(s))); this.el('s-meter').setAttribute('aria-valuetext', `${s.stamina} of ${maxStamina(s)} stamina`);
     this.label('s-location', s.place === 'studio' ? STUDIO_NAMES[i] : s.place==='lobby'&&this.hero.x>75?'Lucky Lantern Noodles':s.place === 'lobby' && this.hero.x > 53 ? 'Student Accommodation' : PLACES[s.place].title);
     this.label('s-location-code', s.place === 'studio' ? `L${s.studio} · STUDIO ${String(s.studio).padStart(2, '0')}` : PLACES[s.place].subtitle);
+    this.el('s-journey-panel').hidden=!this.insideBuilding();this.el('s-day-card').hidden=this.insideBuilding();this.el('s-day').hidden=!this.insideBuilding();
+    this.label('s-weekday',weekdayName(s));this.label('s-semester-number','Semester '+semesterNumber(s));this.label('s-school-status',isSchoolDay(s)?'':'Classes closed · weekend');
     this.label('s-coins', `◉ ${s.coins}`); this.label('s-day', `DAY ${String(s.day).padStart(2, '0')}`); this.label('s-journey', `${total} / 9 studios completed`);
     this.label('s-xp', `${s.xp} / ${xpNeeded(s)} XP · Level ${s.level}`); this.el('s-xp-fill').style.width = `${s.xp / xpNeeded(s) * 100}%`;
     this.label('s-knowledge',`Studio ${s.studio} · Knowledge ${s.knowledge[i]}/${KNOWLEDGE_REQUIRED}${s.cleared[i]?' · ✓ Passed':''}`);
@@ -1130,21 +1176,22 @@ export class StudioGame {
     this.el('s-lobby-sparkles').hidden = s.place !== 'lobby' || this.cameraBase > 4;
     this.ui.classList.toggle('in-lobby', s.place === 'lobby');
     const busy = this.transition.active || this.fight || this.classElapsed !== null || this.sleepElapsed !== null || this.activityBusy;
-    (this.el('s-lobby-button') as HTMLButtonElement).disabled = busy || s.place === 'lobby';
-    (this.el('s-map-button') as HTMLButtonElement).disabled = busy;
+    for(const id of ['s-lift-left','s-lift-right'])(this.el(id) as HTMLButtonElement).disabled=busy;
     this.el('s-boss').hidden = !this.fight; this.label('s-boss-title', `${this.currentTeacher().name.toUpperCase()} · ${Math.ceil(this.boss.hp)} / ${this.bossMax}`);
     this.el('s-boss-fill').style.width = `${this.boss.hp / this.bossMax * 100}%`;
     this.label('s-boss-tip', this.bossMove ? `${this.bossMove.kind.toUpperCase()} incoming · dodge, jump or interrupt!` : this.comboHits>1?`${this.comboHits} hits · keep the combo going!`:'Use the desks, lights and loose stationery.');
     this.el('s-move-dock').hidden=!this.fight;
     for(const key of ['uppercut','kick','dodge'] as const){const button=this.el(`move-${key}`) as HTMLButtonElement;button.disabled=this.specialCooldown[key]>0||this.hero.stun>0||!!this.special;button.style.setProperty('--cooldown',String(this.specialCooldown[key]/(key==='dodge'?1.2:key==='uppercut'?1.5:1.25)));}
     const key=(action:ActionName)=>prettyKey(this.input.getBindings()[action][0]??'—');
-    this.label('s-controls',`${key('moveLeft')} ${key('moveRight')} move · ${key('jump')} jump · ${key('interact')} ${this.fight?'grab / throw':'interact'} · ${this.fight?`${key('attack')} attack · ${key('skill1')} uppercut · ${key('skill2')} kick`:'M building'}`);
+    this.label('s-controls',`${key('moveLeft')} ${key('moveRight')} move · ${key('jump')} jump · ${key('interact')} ${this.fight?'grab / throw':'interact'} · ${this.fight?`${key('attack')} attack · ${key('skill1')} uppercut · ${key('skill2')} kick`:this.canUseLift()?'M lift':`${key('stats')} drop`}`);
     const nearby = this.near();
     this.el('s-archive-board').title=nearby==='faculty'?`${key('interact')} · Open professor archive`:'Open professor archive';
-    this.label('s-context-hint',this.fight || this.classroomPropAvailable() ? this.arena.held('hero')?'E · throw '+this.arena.held('hero')!.kind:'E · pick up '+(this.arena.nearby(this.hero)?.kind??'prop') : nearby==='home' && s.place==='home'?'E · rest':nearby==='skills'?'E · train':nearby==='tools'?'E · upgrade tool':nearby==='map'?'E · directory':nearby==='chair'?'E · sit for class':nearby==='instructor'?`${key('attack')} · hit  /  ${key('interact')} · talk`:'E · enter');
+    this.label('s-context-hint',this.fight || this.classroomPropAvailable() ? this.arena.held('hero')?'E · throw '+this.arena.held('hero')!.kind:'E · pick up '+(this.arena.nearby(this.hero)?.kind??'prop') : nearby==='home' && s.place==='home'?'E · rest':nearby==='skills'?'E · train':nearby==='tools'?'E · upgrade tool':nearby==='map'?'E · Floor directory':nearby==='chair'?'E · sit for class':nearby==='instructor'?`${key('attack')} · hit  /  ${key('interact')} · talk`:'E · enter');
+    this.label('s-exit-label',`${key('interact')} · Exit`);
+    for(const id of ['s-lift-left','s-lift-right'])this.el(id).querySelector('span')!.textContent=this.touchMode?'Tap · Floor directory':`${key('interact')} · Floor directory`;
     skill.querySelector('kbd')!.textContent=key('useHp');
     for(const id of ['s-context-hint','s-crafting-label','s-job-label','s-laptop-label'])this.el(id).textContent=this.el(id).textContent!.replace(/^E ·/,`${key('interact')} ·`);
-    const labels: Record<ReturnType<StudioGame['near']>, string> = {restaurant:'Enter Lucky Lantern Noodles',work:'Work a shift',jobfloor:'Cashier counter →',homework:'Do homework on your laptop', faculty:'Open professor archive', workshopfloor:'Crafting table →', chair: s.cleared[i] ? 'Studio complete · head upstairs' : 'Take a seat · attend class', instructor: s.cleared[i] ? 'Talk to your instructor' : 'Hit to start a duel · or talk', exit: s.place==='studio'?'Return to G · Building 100 Lobby':'Step outside to campus', map: 'Explore Building 100', shop: 'Browse the Supply Cupboard', mystery: 'Enter the mysterious shop', clerk: 'Talk to Mika', shopfloor: 'Walk right to Mika’s counter →', building: 'Enter Building 100', lobby:this.hero.x>72?'Lucky Lantern Noodles →':this.hero.x>45?'Accommodation → · noodles further right':'Shop ← · Building 100 →', home: s.place === 'home' ? 'Sleep & restore stamina' : 'Enter your apartment', skills: 'Train stamina & strength', tools: 'Modify weapon' };
+    const labels: Record<ReturnType<StudioGame['near']>, string> = {homefloor:'Jump onto the chair to reach your laptop',foyerfloor:'Walk to a lift to choose a floor',classroomfloor:'Exit door ←',restaurant:'Enter Lucky Lantern Noodles',work:'Work a shift',jobfloor:'Cashier counter →',homework:'Do homework on your laptop', faculty:'Open professor archive', workshopfloor:'Crafting table →', chair: s.cleared[i] ? 'Studio complete · head upstairs' : 'Take a seat · attend class', instructor: s.cleared[i] ? 'Talk to your instructor' : 'Hit to start a duel · or talk', exit: ['studio','skills','tools'].includes(s.place)?'Exit to Building 100 Lobby':'Exit to campus', map: 'Open lift floor directory', shop: 'Browse the Supply Cupboard', mystery: 'Enter the mysterious shop', clerk: 'Talk to Mika', shopfloor: 'Walk right to Mika’s counter →', building: 'Enter Building 100', lobby:this.hero.x>72?'Lucky Lantern Noodles →':this.hero.x>45?'Accommodation → · noodles further right':'Shop ← · Building 100 →', home: s.place === 'home' ? 'Sleep & restore stamina' : 'Enter your apartment', skills: 'Train stamina & strength', tools: 'Modify weapon' };
     this.label('s-interact-text', this.fight ? `${s.weaponEquipped?'Attack with '+WEAPONS[s.weapon].name:'Punch'} · Space / click` : this.classElapsed !== null ? 'Class in session…' : this.sleepElapsed !== null ? 'Resting…' : labels[nearby]);
     (this.el('s-interact') as HTMLButtonElement).disabled = this.transition.active || this.classElapsed !== null || this.sleepElapsed !== null || this.activityBusy;
     this.positionLabels();
